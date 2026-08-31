@@ -39,6 +39,7 @@ html, body {
 body {
   width: 460px;
   max-height: 620px;
+  overflow-x: hidden;
   overflow-y: auto;
   background: var(--vs-bg);
   color: var(--vs-text);
@@ -241,6 +242,13 @@ body::-webkit-scrollbar-thumb { background: var(--vs-border); border-radius: 8px
   font-size: 11px;
   line-height: 1.4;
   color: var(--vs-text-muted);
+  /* The Crawler tab reuses this slot to show the scanned page's URL, which
+     is a single long unbroken token (no spaces) — without a wrap rule it
+     forces this box, and the whole fixed-width popup, wider than intended.
+     overflow-wrap:anywhere allows breaking mid-word/mid-URL as a last
+     resort once the line has no other break point. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* ---------- Footer ---------- */
