@@ -1,0 +1,315 @@
+<html>
+<head>
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/login.css">
+</head>
+    <body>
+
+
+        <div class="main-body">
+
+            <div class="plr-5 d-flex justify-content-between align-items-center mb-2 mt-2">
+                <div class="d-flex align-items-center">
+                  <img class="header-logo" src="../img/header-logo.svg" alt="Logo">
+                  <span class="header-line ms-2 ml-2">Check My Links</span>
+                </div>
+               
+                <div class="left-can">
+                    <img id="view-hide" data-toggle="tooltip" data-placement="bottom" title="Minimize CheckMyLink" src="../img/minimize.png" class="mini-icon">
+                    <div   class="image-gradient-border margin-right-3 close-btn close-all">
+                        <img data-toggle="tooltip" data-placement="bottom" title="Close CheckMyLink" src="../img/close.png" alt="Close" class="close-alql" style="cursor: pointer;">
+                    </div>
+                </div>
+                
+                
+              </div>
+    
+                <div class="icon-group">
+                    <img id="settings" data-toggle="tooltip" data-placement="bottom" title="Settings" src="../img/settings.png" class="com-icons">
+                    <img id="clear-storage" data-toggle="tooltip" data-placement="bottom" title="Reset all" src="../img/refresh-black.png" class="com-icons">
+
+                    <img id="left-arrow"  data-toggle="tooltip" data-placement="bottom" title="Move Left" src="../img/left-arrow.png" class="com-icons">
+                    <img id="right-arrow" data-toggle="tooltip" data-placement="bottom" title="Move Right" src="../img/right-arrow.png" class="com-icons">
+
+                     <img id="move-icon" data-toggle="tooltip" data-placement="bottom" title="Move popup" src="../img/move-no-crown.svg" class="com-icons move-icon ">
+
+                    <img id="view-excluded" data-toggle="tooltip" data-placement="bottom" title="View Excluded Links" src="../img/exclude-no-crown.svg" class="com-icons">
+                </div>
+
+        <div class="line-code"></div>
+       
+      
+        <div class="progress-bar-section mt-1 mb-1 plr-5">
+            <div class="container my-4 p-2 border progress-bar-section-inner shadow-sm" >
+                <div class="d-flex justify-content-between align-items-center mb-2 counters-row">
+                    <div>
+                        <span class="fs-4 fw-semibold text-secondary">Total:</span>
+                        <span id="totalCount" class="fs-2 fw-bold">0</span>
+                    </div>
+                    <div>
+                        <span class="fs-4 fw-semibold text-secondary">Queued:</span>
+                        <span id="queuedCount" class="fs-2 fw-bold orange-text" >0</span>
+                    </div>
+                    <div id="percentComplete" class="fs-4 fw-bold" style="color:#56b5ff;">0%</div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress mb-2">
+                    <div id="progressBar" class="progress-bar" role="progressbar"
+                        style="width: 0%; background-color:#2FBAFF;"></div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="m-0 fw-semibold counter-text-line with-intervals">
+                        Processing...
+                    </h3>
+
+                    <h3 class="m-0 fw-semibold counter-text-line no-intervals">Click on edit range to set.
+                    </h3>
+
+                    <button id="editRangeBtn">
+                        Edit Range 
+                    </button>
+                </div>
+
+                <div class="lc-highlight-toggle-row">
+                    <label class="lc-highlight-toggle" for="autoHighlightToggle" data-toggle="tooltip" data-placement="bottom" title="When on, checked links are colored on the page as they resolve. When off, links are still checked and counted, but the page itself is left unmarked.">
+                        <input type="checkbox" id="autoHighlightToggle" checked>
+                        <span class="lc-highlight-toggle-switch"></span>
+                        <span class="lc-highlight-toggle-label">Auto-highlight links on page</span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+    
+        <!-- Container for rows with one column each -->
+        <div class="container1 mt-2 plr-5">
+            <!-- First row with background color -->
+            <div class="row  own-row" id="valid-links-1">
+                <div class="col">
+                   
+                    <div class="row-content">
+                        <div class="right-sider"  data-toggle="tooltip" data-placement="bottom" title="Status: 200-299"
+                        >Valid Links: <strong class="valid-links">0</strong></div>
+                        <div class="left-sider">
+                            <!-- <input type="color" id="valid-links"> -->
+                            <img class="check-login com-icons download-file valid-down" src="../img/download-white.png" 
+                            
+                            data-toggle="tooltip" data-placement="bottom" title="Download"
+                            
+                            >
+                            <img class="check-login com-icons export-only-valid" src="../img/arrow-white.png" alt="Download" data-toggle="tooltip" data-placement="bottom" title="View">
+                            
+                            <div class="toffee" data-toggle="tooltip" data-placement="bottom" title="Change color">
+                                <input type="color" value="#ffb721" class=" check-login select-color" id="valid-links" />
+                            </div>
+    
+                            <div class="checkbox-wrapper-28 check-login" data-toggle="tooltip" data-placement="bottom" title="Hide color">
+                                <input id="tmp-28" type="checkbox" class="check-login promoted-input-checkbox valid-checkbox" checked/>
+                                <svg><use xlink:href="#checkmark-28" /></svg>
+                                <label for="tmp-28"></label>
+                                <svg xmlns="http://www.w3.org/2000/svg" style="display: none">
+                                  <symbol id="checkmark-28" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-miterlimit="10" fill="none"  d="M22.9 3.7l-15.2 16.6-6.6-7.1">
+                                    </path>
+                                  </symbol>
+                                </svg>
+                              </div>
+                        </div>
+                    </div>
+    
+    
+                </div>
+            </div>
+            <!-- Second row with background color -->
+            <div class="row  own-row" id="redirect-links-1">
+                <div class="col">
+                    <div class="row-content">
+    
+                        <div class="right-sider" data-toggle="tooltip" data-placement="bottom" title="Status: 300-399">Valid redirect links: <strong class="redirecting-links">0</strong></div>
+                        <div class="left-sider">
+                            <img class="check-login com-icons download-file redirect-down" src="../img/download-white.png" alt="Download" data-toggle="tooltip" data-placement="bottom" title="Download">
+                            <img class="check-login com-icons export-only-redirect" src="../img/arrow-white.png" alt="Download" data-toggle="tooltip" data-placement="bottom" title="View">
+                            
+                            <div class="toffee" data-toggle="tooltip" data-placement="bottom" title="Change color">
+                                <input type="color" value="#ffb721" class="check-login select-color" id="redirect-links" />
+                            </div>
+    
+                            <div class="checkbox-wrapper-29" data-toggle="tooltip" data-placement="bottom" title="Hide color">
+                                <input id="tmp-29" type="checkbox" class="check-login  promoted-input-checkbox-29 redirect-checkbox" checked/>
+                                <svg><use xlink:href="#checkmark-29" /></svg>
+                                <label for="tmp-29"></label>
+                                <svg xmlns="http://www.w3.org/2000/svg" style="display: none">
+                                  <symbol id="checkmark-29" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-miterlimit="10" fill="none"  d="M22.9 3.7l-15.2 16.6-6.6-7.1">
+                                    </path>
+                                  </symbol>
+                                </svg>
+                              </div>
+                        </div> 
+    
+                    </div>
+                </div>
+            </div>
+            <!-- Third row with background color -->
+            <div class="row  own-row" id="warnings-links-1">
+                <div class="col">
+                    <div class="row-content">
+                        
+    
+                        <div class="right-sider" data-toggle="tooltip" data-placement="bottom" title="Warnings">Warnings: <strong class="warnings">0</strong></div>
+                        <div class="left-sider">
+                            <img class="check-login  com-icons download-file warning-down" src="../img/download-white.png" alt="Download" data-toggle="tooltip" data-placement="bottom" title="Download">
+                            <img class="check-login com-icons export-only-warning" src="../img/arrow-white.png" alt="Download" data-toggle="tooltip" data-placement="bottom" title="View">
+                            
+                            <div class="toffee" data-toggle="tooltip" data-placement="bottom" title="Change color">
+                                <input type="color" value="#ffb721" class="check-login select-color" id="warnings-links" />
+                            </div>
+    
+                            <div class="checkbox-wrapper-30" data-toggle="tooltip" data-placement="bottom" title="Hide color">
+                                <input id="tmp-30" type="checkbox" class="check-login promoted-input-checkbox warning-checkbox" checked/>
+                                <svg><use xlink:href="#checkmark-28" /></svg>
+                                <label for="tmp-30"></label>
+                                <svg xmlns="http://www.w3.org/2000/svg" style="display: none">
+                                  <symbol id="checkmark-28" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-miterlimit="10" fill="none"  d="M22.9 3.7l-15.2 16.6-6.6-7.1">
+                                    </path>
+                                  </symbol>
+                                </svg>
+                              </div>
+                        </div> 
+    
+    
+                    </div>
+    
+    
+                </div>
+            </div>
+            <!-- Fourth row with background color -->
+            <div class="row  own-row" id="invalid-links-1">
+                <div class="col">
+                    <div class="row-content">
+                        
+                        <div class="right-sider" data-toggle="tooltip" data-placement="bottom" title="Invalid links">Invalid links: <strong class="invalid-links">0</strong></div>
+                        <div class="left-sider">
+                            <img class="check-login com-icons download-file invalid-down" src="../img/download-white.png" alt="Download" data-toggle="tooltip" data-placement="bottom" title="Download">
+                            
+                            <img class="check-login com-icons export-only-invalid" src="../img/arrow-white.png" alt="Download" data-toggle="tooltip" data-placement="bottom" title="View">
+                            
+                            <div class="toffee" data-toggle="tooltip" data-placement="bottom" title="Change color">
+                                <input type="color" value="#ffb721" class="check-login select-color" id="invalid-links" />
+                            </div>
+    
+                            <div class="checkbox-wrapper-31" data-toggle="tooltip" data-placement="bottom" title="Hide color">
+                                <input id="tmp-31" type="checkbox" class="check-login promoted-input-checkbox invalid-checkbox" checked />
+                                <svg><use xlink:href="#checkmark-31" /></svg>
+                                <label for="tmp-31"></label>
+                                <svg xmlns="http://www.w3.org/2000/svg" style="display: none">
+                                  <symbol id="checkmark-31" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-miterlimit="10" fill="none"  d="M22.9 3.7l-15.2 16.6-6.6-7.1">
+                                    </path>
+                                  </symbol>
+                                </svg>
+                              </div>
+                        </div> 
+    
+    
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <div class="line-code"></div>
+    
+        <div class="container mt-3 mb-1 footer-buttons">
+            <div class="row justify-content-center">
+                <!-- First item -->
+                <div class="drop-box-css  align-items-center justify-content-center all-export">
+                    <img src="../img/download-01-2.png" alt="Item 1" class="me-2 com-icons">
+                    <span class="ex-label arrow-pointer">Export All</span>
+                </div>
+                <!-- Second item -->
+                <div class="drop-box-css check-login  align-items-center justify-content-center view-all-link" id="view-all">
+                    <img src="../img/arrow-black.png" alt="Item 2" class="me-2 com-icons">
+                    <span class="ex-label">View All</span>
+                </div>
+                <!-- Third item -->
+                <div class="drop-box-css  align-items-center justify-content-center reload-tab">
+                    <img src="../img/refresh-black.png" alt="Item 3" class="me-2 com-icons">
+                    <span class="ex-label arrow-pointer">Refresh</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="excludedModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-content">
+
+                    <div class="modal-header border-0 pb-2">
+
+                        <div>
+                            <h5 class="modal-title fw-bold">
+                                Excluded sections
+                            </h5>
+
+                            <small class="text-muted">
+                                Choose which parts of the page to leave out of the scan - like Header or Footer.
+                            </small>
+                        </div>
+                        <img src="../img/close.png" class="btn-close" style="cursor: pointer;">
+                    </div>
+
+                    <div class="modal-body website-section">
+                        <div id="feature-message">
+
+                        </div>
+
+                            
+                            <div class="cml-exclude-wrap" id="cmlExcludeWrap">
+                                <button type="button" class="cml-exclude-btn" id="cmlExcludeBtn" aria-pressed="false" aria-describedby="cmlExcludeTip">
+                                <!-- Inspect / element-picker icon: dashed area + cursor arrow -->
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M5 3 H7 M11 3 H13 M17 3 H19 M3 5 V7 M3 11 V13 M3 17 V19 M21 5 V7 M5 21 H7"/>
+                                    <path d="M12 12 L20.5 15.5 L16.8 16.8 L15.5 20.5 Z" fill="currentColor" stroke="currentColor" stroke-width="1.5"/>
+                                </svg>
+                                Exclude area
+                                </button>
+
+                                <span class="cml-tooltip" role="tooltip" id="cmlExcludeTip">
+                                <!-- Shown before clicking -->
+                                <span class="cml-tip-default">
+                                    <strong>Exclude an area from scan</strong>
+                                    Click this button, then click any section of the page. Links inside that area will be skipped when Check My Links scans the page.
+                                </span>
+                                <!-- Shown after clicking (selection mode on) -->
+                                <span class="cml-tip-active">
+                                    <strong>Selection mode is on</strong>
+                                    Click any section of the page to exclude its links from the scan. Click this button again or press Esc to cancel.
+                                </span>
+                                </span>
+                            </div>
+
+                            <span class="info-link"><img title="Click to learn more about exclude feature" src="../img/info.svg"></span>
+
+                        <div id="exclude-messsage"></div>
+
+                        <div id="savedElements"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+<script src="../lib/jq.js"></script>
+    <script src="../lib/popper.min.js"></script>
+    <script src="../lib/bootstrap.min.js"></script>
+    <script src="../constants.js"></script>
+    <script src="../mini-xlsx.js"></script>
+    <script src="../report.js"></script>
+    <script src="../exclude.js"></script>
+</html>

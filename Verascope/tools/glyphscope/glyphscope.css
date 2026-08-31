@@ -1,0 +1,210 @@
+/* ============================================================
+   Tool 7: Glyphscope — font intelligence for the web.
+
+   RETHEME: the uploaded popup.css shipped a light theme (bare
+   `*` reset, `body { background: linear-gradient(180deg,
+   #f6f7fb...) }`, white cards, dark-on-light text throughout),
+   the same pattern already retheme'd for Form Validator and
+   Link Checker. Converted using the exact same hex values
+   already verified working there (the --gs- prefixed tokens
+   below mirror the --fv- and --lc- token values numerically)
+   so this tab reads as a sibling of
+   the rest of the shell rather than a fifth independently-
+   invented "dark theme." Every selector prefixed under
+   .tool-glyphscope; every layout/spacing/sizing property is
+   untouched from the original, only colors changed. The
+   original's own purple accent (#7c6dff) is kept as this tool's
+   distinct accent — same principle as Check My Links keeping
+   its own amber: a feature/brand accent, not a light/dark
+   mismatch, so it didn't need converting to the shell's blue.
+   ============================================================ */
+
+.tool-glyphscope {
+  --gs-bg: #0f1115;
+  --gs-panel: #161922;
+  --gs-panel-2: #1c2030;
+  --gs-border: #2a2f3f;
+  --gs-text: #e8eaf0;
+  --gs-text-dim: #9aa1b4;
+  --gs-accent: #7c6dff;
+  --gs-accent-2: #9a8cff;
+  --gs-good: #34d399;
+  --gs-warn: #fbbf24;
+
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--gs-bg);
+  color: var(--gs-text);
+}
+.tool-glyphscope * { box-sizing: border-box; }
+
+.tool-glyphscope .wrap { padding: 18px; }
+
+.tool-glyphscope .scan-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.tool-glyphscope .scan-row .btn.primary { flex: 1; margin-bottom: 0; }
+
+.tool-glyphscope header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 14px;
+}
+
+.tool-glyphscope .headtext { flex: 1; min-width: 0; }
+
+.tool-glyphscope .logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: block;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  flex-shrink: 0;
+}
+
+.tool-glyphscope h1 { font-size: 15.5px; font-weight: 700; letter-spacing: -0.01em; color: var(--gs-text); margin: 0; }
+.tool-glyphscope .sub { font-size: 11px; color: var(--gs-text-dim); margin-top: 2px; }
+
+/* Master on/off toggle */
+.tool-glyphscope .switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.tool-glyphscope .switch input { opacity: 0; width: 0; height: 0; }
+.tool-glyphscope .slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--gs-panel-2);
+  border: 1px solid var(--gs-border);
+  border-radius: 999px;
+  transition: background 0.15s ease;
+}
+.tool-glyphscope .slider::before {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 2px;
+  top: 2px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+.tool-glyphscope .switch input:checked + .slider { background: var(--gs-accent); border-color: var(--gs-accent); }
+.tool-glyphscope .switch input:checked + .slider::before { transform: translateX(16px); }
+.tool-glyphscope .switch input:disabled + .slider { opacity: 0.6; cursor: not-allowed; }
+
+.tool-glyphscope .status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--gs-panel);
+  border: 1px solid var(--gs-border);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 12px;
+  margin-bottom: 12px;
+  color: var(--gs-text-dim);
+}
+
+.tool-glyphscope .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gs-border);
+  flex-shrink: 0;
+}
+.tool-glyphscope .dot.active { background: var(--gs-good); box-shadow: 0 0 0 3px rgba(52,211,153,0.18); }
+.tool-glyphscope .dot.working { background: var(--gs-warn); box-shadow: 0 0 0 3px rgba(251,191,36,0.18); }
+
+.tool-glyphscope .btn {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  transition: transform 0.08s ease, opacity 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.tool-glyphscope .btn:active { transform: scale(0.98); }
+.tool-glyphscope .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.tool-glyphscope .btn.primary {
+  background: linear-gradient(135deg, var(--gs-accent), var(--gs-accent-2));
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(124, 109, 255, 0.35);
+}
+.tool-glyphscope .btn.primary:hover:not(:disabled) { opacity: 0.92; }
+
+.tool-glyphscope .btn.secondary {
+  background: var(--gs-panel-2);
+  color: var(--gs-text);
+  border: 1.5px solid var(--gs-border);
+}
+.tool-glyphscope .btn.secondary:not(:disabled):hover { border-color: var(--gs-accent); color: var(--gs-accent-2); }
+
+.tool-glyphscope .icn { flex-shrink: 0; }
+
+.tool-glyphscope .stats {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.tool-glyphscope .stat {
+  flex: 1;
+  background: var(--gs-panel);
+  border: 1px solid var(--gs-border);
+  border-radius: 10px;
+  padding: 9px 4px;
+  text-align: center;
+}
+.tool-glyphscope .stat span {
+  display: block;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--gs-accent-2);
+}
+.tool-glyphscope .stat label {
+  font-size: 9px;
+  color: var(--gs-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tool-glyphscope .hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--gs-text-dim);
+  background: var(--gs-panel);
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px dashed var(--gs-border);
+}
+.tool-glyphscope .hint svg { flex-shrink: 0; margin-top: 2px; color: var(--gs-text-dim); }
+
+.tool-glyphscope .wrap.app-off .btn,
+.tool-glyphscope .wrap.app-off .stats,
+.tool-glyphscope .wrap.app-off .status {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.tool-glyphscope footer {
+  text-align: center;
+  font-size: 10px;
+  color: var(--gs-text-dim);
+  margin-top: 12px;
+  letter-spacing: 0.02em;
+}

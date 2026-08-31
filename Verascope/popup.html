@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Verascope</title>
+<link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="tools/meta-inspector/meta-inspector.css">
+<link rel="stylesheet" href="tools/alt-text/alt-text.css">
+<link rel="stylesheet" href="tools/link-extractor/link-extractor.css">
+<link rel="stylesheet" href="tools/nocache/nocache.css">
+<link rel="stylesheet" href="tools/form-validator/form-validator.css">
+<link rel="stylesheet" href="tools/link-checker/shell-trigger.css">
+<link rel="stylesheet" href="tools/glyphscope/glyphscope.css">
+</head>
+<body>
+  <div class="shell">
+
+    <!-- ================= Brand header ================= -->
+    <header class="shell-header">
+      <div class="shell-brand">
+        <span class="shell-brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 12l2 2 4-4"></path>
+            <path d="M12 3l8 4v5c0 5-3.4 8.4-8 9-4.6-.6-8-4-8-9V7l8-4z"></path>
+          </svg>
+        </span>
+        <span class="shell-brand-text">
+          <span class="shell-brand-name">Verascope</span>
+          <span class="shell-brand-tagline">Page Quality &amp; QA Suite</span>
+        </span>
+      </div>
+      <span class="shell-version">v1.9.0</span>
+    </header>
+
+    <!-- ================= Navigation ================= -->
+    <nav class="shell-tabs" role="tablist">
+      <button class="shell-tab active" data-tool="meta-inspector" role="tab" aria-selected="true">
+        <span class="tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="7" y1="9" x2="17" y2="9"></line><line x1="7" y1="13" x2="14" y2="13"></line></svg>
+        </span>
+        <span class="tab-label">Meta</span>
+      </button>
+      <button class="shell-tab" data-tool="alt-text" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>
+        </span>
+        <span class="tab-label">Alt Text</span>
+      </button>
+      <button class="shell-tab" data-tool="link-extractor" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5"></path><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"></path></svg>
+        </span>
+        <span class="tab-label">Links</span>
+      </button>
+      <button class="shell-tab" data-tool="nocache" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><polyline points="21 3 21 9 15 9"></polyline></svg>
+        </span>
+        <span class="tab-label">NoCache</span>
+      </button>
+      <button class="shell-tab" data-tool="form-validator" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        </span>
+        <span class="tab-label">Forms</span>
+      </button>
+      <button class="shell-tab" data-tool="link-checker" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </span>
+        <span class="tab-label">Crawler</span>
+      </button>
+      <button class="shell-tab" data-tool="glyphscope" role="tab" aria-selected="false">
+        <span class="tab-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+        </span>
+        <span class="tab-label">Fonts</span>
+      </button>
+    </nav>
+
+    <!-- ================= TOOL 1: Meta Inspector ================= -->
+    <section class="shell-pane tool-meta-inspector active" data-tool-pane="meta-inspector">
+      <div class="pane-header">
+        <span class="pane-header-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="7" y1="9" x2="17" y2="9"></line><line x1="7" y1="13" x2="14" y2="13"></line></svg>
+        </span>
+        <span class="pane-header-text">
+          <span class="pane-title">Meta Tag Auditor</span>
+          <span class="pane-subtitle">Validate live title &amp; description against your target SEO copy</span>
+        </span>
+      </div>
+      <div class="app">
+        <main class="app-main">
+          <button id="getMetaBtn" class="btn btn-primary btn-full">
+            <span>Get Meta</span>
+          </button>
+
+          <div id="metaSummary" class="meta-summary hidden">
+            <div class="meta-row">
+              <span class="meta-label">Meta Title</span>
+              <span id="metaTitleValue" class="meta-value">—</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Meta Description</span>
+              <span id="metaDescValue" class="meta-value">—</span>
+            </div>
+          </div>
+
+          <div id="compareSection" class="compare-section hidden">
+            <h2>Compare with target</h2>
+            <table class="compare-table">
+              <thead>
+                <tr>
+                  <th>Title / Description</th>
+                  <th>Your Target Copy</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="cell-label">
+                    <span class="row-tag">Title</span>
+                    <div id="actualTitleCell" class="actual-text">—</div>
+                  </td>
+                  <td>
+                    <textarea id="targetTitleInput" placeholder="Enter your intended meta title…" rows="3"></textarea>
+                  </td>
+                  <td>
+                    <div id="titleResult" class="result-pill result-pending">—</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="cell-label">
+                    <span class="row-tag">Description</span>
+                    <div id="actualDescCell" class="actual-text">—</div>
+                  </td>
+                  <td>
+                    <textarea id="targetDescInput" placeholder="Enter your intended meta description…" rows="4"></textarea>
+                  </td>
+                  <td>
+                    <div id="descResult" class="result-pill result-pending">—</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <button id="compareBtn" class="btn btn-secondary btn-full">Compare</button>
+            <button id="exportBtn" class="btn btn-export btn-full" disabled>Export Report (CSV)</button>
+          </div>
+
+          <div id="emptyState" class="empty-state">
+            <p>Click <strong>Get Meta</strong> to pull the title &amp; description from the current tab.</p>
+          </div>
+        </main>
+
+        <footer class="app-footer">
+          <span id="charCounts"></span>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ================= TOOL 2: Alt Text Viewer ================= -->
+    <section class="shell-pane tool-alt-text" data-tool-pane="alt-text">
+      <div class="pane-header">
+        <span class="pane-header-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>
+        </span>
+        <span class="pane-header-text">
+          <span class="pane-title">Alt Text Compliance</span>
+          <span class="pane-subtitle">Overlay image alt text on the page and export an Excel validation report</span>
+        </span>
+      </div>
+      <button id="toggleBtn">Toggle Overlay</button>
+      <button id="exportBtn">Export Validation Report (Excel)</button>
+      <div id="status"></div>
+    </section>
+
+    <!-- ================= TOOL 3: Link & Text Extractor ================= -->
+    <section class="shell-pane tool-link-extractor" data-tool-pane="link-extractor">
+      <div class="pane-header">
+        <span class="pane-header-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5"></path><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"></path></svg>
+        </span>
+        <span class="pane-header-text">
+          <span class="pane-title">Link &amp; Asset Extractor</span>
+          <span class="pane-subtitle">Export every anchor and image link on the page to Excel</span>
+        </span>
+      </div>
+      <div class="container">
+        <p class="desc">Extracts all anchor texts, image names &amp; alt texts with their URLs from the current page.</p>
+        <button class="extract-btn" id="extractBtn">
+          <div class="btn-inner"><span>⬇</span><span>EXTRACT</span></div>
+        </button>
+        <div class="status" id="status"></div>
+        <div class="footer">2 Sheets: TEXT-LINKS · IMAGE-LINKS · .xlsx</div>
+      </div>
+    </section>
+
+    <!-- ================= TOOL 4: NoCache URL Opener ================= -->
+    <section class="shell-pane tool-nocache" data-tool-pane="nocache">
+      <div class="pane-header">
+        <span class="pane-header-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><polyline points="21 3 21 9 15 9"></polyline></svg>
+        </span>
+        <span class="pane-header-text">
+          <span class="pane-title">Cache-Buster URL Launcher</span>
+          <span class="pane-subtitle">Open bulk URLs with fresh cache-busting parameters injected</span>
+        </span>
+      </div>
+      <div class="card">
+
+        <div class="field">
+
+          <label>
+            Number of .nocache insertions
+          </label>
+
+          <input
+            type="number"
+            id="nocacheCount"
+            min="1"
+            value="1">
+
+        </div>
+
+        <div class="stats">
+          URLs Loaded:
+          <span id="urlCount">0</span>
+        </div>
+
+        <div class="field">
+
+          <label>
+            URLs (One URL Per Line)
+          </label>
+
+          <textarea
+            id="urls"
+            placeholder="https://example.com/page.html"></textarea>
+
+        </div>
+
+        <div
+          id="warning"
+          class="warning"
+          style="display:none;">
+        </div>
+
+        <button id="openBtn">
+          Open URLs
+        </button>
+
+        <div id="result"></div>
+
+      </div>
+    </section>
+
+    <!-- ================= TOOL 5: Form QA Automation ================= -->
+    <section class="shell-pane tool-form-validator" data-tool-pane="form-validator">
+      <div class="pane-header">
+        <span class="pane-header-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        </span>
+        <span class="pane-header-text">
+          <span class="pane-title">Form QA Automation</span>
+          <span class="pane-subtitle">Generate and run semantic-aware validation tests against page forms</span>
+        </span>
+      </div>
+      <main>
+        <div class="scan-row">
+          <button id="detectButton" class="primary full" type="button">Scan Form</button>
+          <span id="modeBadge" class="mode-badge" title="Safe Test Mode blocks destructive-looking forms until you confirm">Safe Mode</span>
+        </div>
+        <p id="status" class="status">Open a page with a form, then click Scan Form.</p>
+
+        <!-- Dashboard -->
+        <section id="dashboard" class="dashboard" hidden>
+          <div class="metric-grid">
+            <div class="metric"><span id="metricForms" class="metric-value">0</span><span class="metric-label">Forms</span></div>
+            <div class="metric"><span id="metricFields" class="metric-value">0</span><span class="metric-label">Fields</span></div>
+            <div class="metric"><span id="metricTests" class="metric-value">0</span><span class="metric-label">Tests generated</span></div>
+            <div class="metric"><span id="metricExecuted" class="metric-value">0</span><span class="metric-label">Executed</span></div>
+            <div class="metric pass"><span id="metricPassed" class="metric-value">0</span><span class="metric-label">Passed</span></div>
+            <div class="metric fail"><span id="metricFailed" class="metric-value">0</span><span class="metric-label">Failed</span></div>
+            <div class="metric warn"><span id="metricWarnings" class="metric-value">0</span><span class="metric-label">Warnings</span></div>
+          </div>
+
+          <div class="category-toggles" id="categoryToggles">
+            <p class="toggles-heading">Test categories</p>
+            <div class="toggle-row">
+              <label class="toggle"><input type="checkbox" data-category="Positive" checked><span>Positive</span></label>
+              <label class="toggle"><input type="checkbox" data-category="Negative" checked><span>Negative</span></label>
+              <label class="toggle"><input type="checkbox" data-category="Boundary" checked><span>Boundary</span></label>
+              <label class="toggle"><input type="checkbox" data-category="Required" checked><span>Required</span></label>
+              <label class="toggle"><input type="checkbox" data-category="Accessibility" checked><span>Accessibility</span></label>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <button id="generateButton" class="secondary" type="button">Generate Tests</button>
+            <button id="runAllButton" class="secondary" type="button">Run Tests</button>
+            <button id="exportButton" class="primary" type="button">Extract Report</button>
+            <button id="clearButton" class="ghost" type="button">Clear Results</button>
+          </div>
+        </section>
+
+        <section id="progress" class="progress" hidden>
+          <div><span id="progressText"></span><span id="progressCount"></span></div>
+          <progress id="progressBar" value="0" max="1"></progress>
+          <button id="stopButton" class="danger" type="button">Stop</button>
+        </section>
+
+        <!-- Results table -->
+        <section id="resultsSection" class="results-section" hidden>
+          <div class="results-toolbar">
+            <input id="searchInput" type="search" placeholder="Search field, input, message…" class="search-input">
+            <select id="filterCategory" class="filter-select">
+              <option value="">All categories</option>
+              <option value="Positive">Positive</option>
+              <option value="Negative">Negative</option>
+              <option value="Boundary">Boundary</option>
+              <option value="Required">Required</option>
+              <option value="Accessibility">Accessibility</option>
+            </select>
+            <select id="filterResult" class="filter-select">
+              <option value="">All results</option>
+              <option value="PASS">PASS</option>
+              <option value="FAIL">FAIL</option>
+              <option value="WARNING">WARNING</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table id="resultsTable" class="results-table">
+              <thead>
+                <tr>
+                  <th data-sort="testId">Test ID</th>
+                  <th data-sort="field">Field</th>
+                  <th data-sort="category">Category</th>
+                  <th data-sort="input">Input</th>
+                  <th data-sort="result">Result</th>
+                  <th data-sort="severity">Severity</th>
+                </tr>
+              </thead>
+              <tbody id="resultsBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Failed-test detail panel -->
+        <section id="detailPanel" class="detail-panel" hidden>
+          <div class="detail-header">
+            <h2>Test detail</h2>
+            <button id="closeDetail" class="ghost small" type="button">Close</button>
+          </div>
+          <dl id="detailBody" class="detail-body"></dl>
+        </section>
+
+        <section id="fields" class="fields"></section>
+      </main>
+
+      <template id="fieldTemplate">
+        <article class="field-card">
+          <div class="field-heading">
+            <div><h2 class="field-label"></h2><p class="field-meta"></p></div>
+            <span class="case-count"></span>
+          </div>
+          <div class="rules"></div>
+          <div class="field-actions"><button class="run-field secondary" type="button">Run field</button></div>
+          <div class="cases"></div>
+        </article>
+      </template>
+    </section>
+
+    <!-- ================= TOOL 6: Check My Links (broken-link crawler) ================= -->
+    <section class="shell-pane tool-link-checker" data-tool-pane="link-checker">
+      <div class="pane-header">
+        <span class="pane-header-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </span>
+        <span class="pane-header-text">
+          <span class="pane-title">Broken Link Crawler</span>
+          <span class="pane-subtitle">Scan the page for broken links with a live on-page report</span>
+        </span>
+      </div>
+      <div class="lc-panel">
+        <button id="lcScanBtn" class="lc-scan-btn" type="button">Scan Page for Broken Links</button>
+        <p id="lcStatus" class="lc-status">Opens a live report on the page — counts, exclude areas, and exports all happen there.</p>
+      </div>
+    </section>
+
+    <!-- ================= TOOL 7: Glyphscope (font intelligence) ================= -->
+    <section class="shell-pane tool-glyphscope" data-tool-pane="glyphscope">
+      <div class="pane-header">
+        <span class="pane-header-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+        </span>
+        <span class="pane-header-text">
+          <span class="pane-title">Font Intelligence</span>
+          <span class="pane-subtitle">Audit every typeface on the page with live hover inspection</span>
+        </span>
+      </div>
+      <div class="wrap">
+        <div class="scan-row">
+          <button id="analyzeBtn" class="btn primary">
+            <svg class="icn" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            Analyze Page
+          </button>
+          <label class="switch" title="Turn Glyphscope on or off">
+            <input type="checkbox" id="masterToggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="status" id="status">
+          <span class="dot" id="statusDot"></span>
+          <span id="statusText">Not analyzed yet</span>
+        </div>
+
+        <button id="exportBtn" class="btn secondary" disabled>
+          <svg class="icn" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v12"></path>
+            <path d="M7 10l5 5 5-5"></path>
+            <path d="M4 20h16"></path>
+          </svg>
+          Export Report
+        </button>
+
+        <div class="stats" id="stats" hidden>
+          <div class="stat"><span id="statElements">0</span><label>Text elements</label></div>
+          <div class="stat"><span id="statFonts">0</span><label>Unique fonts</label></div>
+        </div>
+
+        <div class="hint">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <span>After analyzing, hover any pure text on the page for live font details. Images and other non-text content are ignored entirely.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= Footer ================= -->
+    <footer class="shell-footer">
+      <span class="shell-footer-label">Verascope QA Suite</span>
+      <span class="shell-footer-status"><span class="dot" aria-hidden="true"></span>Ready</span>
+    </footer>
+  </div>
+
+  <script src="libs/exceljs_bundle.js"></script>
+
+  <script src="tools/meta-inspector/meta-inspector.js"></script>
+  <script src="tools/alt-text/alt-text.js"></script>
+  <script src="tools/link-extractor/link-extractor.js"></script>
+  <script src="tools/nocache/nocache.js"></script>
+  <script src="tools/form-validator/mini-xlsx.js"></script>
+  <script src="tools/form-validator/popup.js"></script>
+  <script src="tools/link-checker/shell-trigger.js"></script>
+  <script src="tools/glyphscope/exceljs.min.js"></script>
+  <script src="tools/glyphscope/popup.js"></script>
+
+  <script src="popup.js"></script>
+</body>
+</html>

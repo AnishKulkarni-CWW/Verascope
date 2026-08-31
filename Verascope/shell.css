@@ -1,0 +1,277 @@
+/* ============================================================
+   Verascope — shell chrome
+   Brand header, navigation, layout tokens, and footer for the
+   unified QA popup. Tool panes keep their own original,
+   functionally-scoped stylesheets (alt-text.css, links.css,
+   nocache.css, form-validator.css, shell-trigger.css,
+   glyphscope.css) exactly as they were — nothing in those files
+   is duplicated or overridden here except where noted.
+   ============================================================ */
+
+* { box-sizing: border-box; }
+
+:root {
+  --vs-bg: #0d0f14;
+  --vs-surface: #14161f;
+  --vs-surface-raised: #1a1d29;
+  --vs-border: #262a38;
+  --vs-border-soft: #1f222e;
+
+  --vs-text: #eef0f7;
+  --vs-text-muted: #9aa1b8;
+  --vs-text-faint: #666e87;
+
+  --vs-accent: #6e63e8;
+  --vs-accent-hover: #7d72f2;
+  --vs-accent-soft: rgba(110, 99, 232, 0.12);
+
+  --vs-radius-sm: 6px;
+  --vs-radius-md: 10px;
+
+  --vs-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width: 460px;
+  max-height: 620px;
+  overflow-y: auto;
+  background: var(--vs-bg);
+  color: var(--vs-text);
+  font-family: var(--vs-font);
+  -webkit-font-smoothing: antialiased;
+}
+
+body::-webkit-scrollbar { width: 8px; }
+body::-webkit-scrollbar-track { background: transparent; }
+body::-webkit-scrollbar-thumb { background: var(--vs-border); border-radius: 8px; }
+
+.shell { display: flex; flex-direction: column; min-height: 100%; }
+
+/* ---------- Brand header ---------- */
+.shell-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 16px 12px;
+  background: linear-gradient(180deg, var(--vs-surface-raised) 0%, var(--vs-surface) 100%);
+  border-bottom: 1px solid var(--vs-border);
+}
+
+.shell-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.shell-brand-mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, var(--vs-accent) 0%, #4b3fc7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(110, 99, 232, 0.35);
+}
+
+.shell-brand-mark svg {
+  width: 15px;
+  height: 15px;
+  stroke: #ffffff;
+}
+
+.shell-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.shell-brand-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  color: var(--vs-text);
+}
+
+.shell-brand-tagline {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--vs-text-faint);
+  letter-spacing: 0.15px;
+}
+
+.shell-version {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--vs-text-muted);
+  background: var(--vs-surface);
+  border: 1px solid var(--vs-border);
+  padding: 3px 7px;
+  border-radius: 999px;
+  letter-spacing: 0.3px;
+}
+
+/* ---------- Navigation ---------- */
+.shell-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  background: var(--vs-surface);
+  border-bottom: 1px solid var(--vs-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 6px 6px 0;
+  gap: 2px;
+}
+
+.shell-tab {
+  flex: 1 1 auto;
+  min-width: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 4px 9px;
+  background: transparent;
+  border: none;
+  border-radius: var(--vs-radius-sm) var(--vs-radius-sm) 0 0;
+  color: var(--vs-text-muted);
+  font-family: var(--vs-font);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.shell-tab .tab-icon {
+  width: 15px;
+  height: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shell-tab .tab-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+}
+
+.shell-tab:hover {
+  color: var(--vs-text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.shell-tab.active {
+  color: #ffffff;
+  background: var(--vs-accent-soft);
+  box-shadow: inset 0 -2px 0 var(--vs-accent);
+}
+
+/* ---------- Pane container ---------- */
+.shell-pane {
+  display: none;
+}
+
+.shell-pane.active {
+  display: block;
+  animation: vs-fade-in 0.12s ease;
+}
+
+@keyframes vs-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.shell-pane-body {
+  padding: 16px;
+}
+
+/* ---------- Pane header (per-tool identity) ---------- */
+.pane-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--vs-border-soft);
+  background: var(--vs-surface);
+}
+
+.pane-header-icon {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--vs-accent-soft);
+  color: var(--vs-accent-hover);
+}
+
+.pane-header-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.pane-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pane-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--vs-text);
+  letter-spacing: 0.1px;
+}
+
+.pane-subtitle {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--vs-text-muted);
+}
+
+/* ---------- Footer ---------- */
+.shell-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-top: 1px solid var(--vs-border-soft);
+  background: var(--vs-surface);
+}
+
+.shell-footer-label {
+  font-size: 10px;
+  color: var(--vs-text-faint);
+  letter-spacing: 0.2px;
+}
+
+.shell-footer-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--vs-text-faint);
+}
+
+.shell-footer-status .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2ecc71;
+  box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.18);
+}

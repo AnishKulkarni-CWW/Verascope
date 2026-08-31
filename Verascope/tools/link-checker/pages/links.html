@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CheckMyLinks_Report</title>
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="../css/buttons.dataTables.min.css">
+    <link rel="stylesheet" href="../css/links.css">
+</head>
+<body style="font-size: 13px;">
+
+    <div class="ml-4 mr-4">
+        <h2 id="target-tab"></h2>
+        <!-- Filter Dropdown -->
+        <div class="status-filter-p d-flex justify-content-between align-items-center">
+          <div>
+            <label for="status-filter">Filter by Status Code:</label>
+            <select id="status-filter">
+              <option value="">Show All</option>
+            </select>
+          </div>
+          <button class="btn btn-primary one-by-one ml-2" data-toggle="modal" data-target="#actionModal">Fetch All HTTPS Status Code</button>
+          <span class="total-urls">Total Urls: 0</span>
+        </div>
+        <hr>
+        <!-- Table -->
+        <table id="example" class="display table table-striped" style="width:100%">
+          <thead>
+            <tr>
+              <th style="width: 50%;">URL</th>
+              <th>Label</th>
+              <th>Status Code</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+
+   <!-- Modal -->
+   <div class="modal fade" id="actionModal" tabindex="-1" role="dialog" aria-labelledby="actionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="actionModalLabel">Automation Actions</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>The app will open each URL one by one with an invalid HTTP code to retrieve the actual HTTP status code. Please do not refresh this window.</p>
+               <p id="modalText"></p>
+               <p id="dublicate-urls"></p>
+               
+                <button type="button" class="btn btn-success state-btns" id="startBtn">Start</button>
+                <!-- <button type="button" class="btn btn-primary state-btns" id="resumeBtn">Resume</button>
+                <button type="button" class="btn btn-warning state-btns" id="pauseBtn">Pause</button> -->
+                <button type="button" class="btn btn-danger state-btns" id="stopBtn">Stop</button>
+            
+            </div>
+           
+        </div>
+    </div>
+</div>
+
+
+     <script src="../lib/jquery.min.js"></script>
+     <script src="../lib/bootstrap.min.js"></script>
+     <script src="../lib/dataTables.min.js"></script>
+     <script src="../lib/dataTables.buttons.min.js"></script>
+     <script src="../lib/buttons.html5.min.js"></script>
+   
+     <script src="../lib/buttons.print.min.js"></script>
+     <script src="../lib/jszip.min.js"></script>
+     <script src="../lib/vfs_fonts.js"></script>
+     <script src="../mini-xlsx.js"></script>
+     <script src="../links.js"></script>
+</body>
+</html>

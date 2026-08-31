@@ -1,0 +1,225 @@
+/* Meta Inspector — scoped under .tool-meta-inspector so its custom
+   properties and (originally bare) `body` rule can't leak into the
+   shell chrome or the other two tools' panes. */
+
+.tool-meta-inspector {
+  --mi-bg: #0f1115;
+  --mi-panel: #161922;
+  --mi-panel-2: #1c2030;
+  --mi-border: #2a2f3f;
+  --mi-text: #e8eaf0;
+  --mi-text-dim: #9aa1b4;
+  --mi-accent: #5b8def;
+  --mi-accent-2: #7c6df0;
+  --mi-good: #34d399;
+  --mi-good-bg: rgba(52, 211, 153, 0.12);
+  --mi-bad: #f87171;
+  --mi-bad-bg: rgba(248, 113, 113, 0.12);
+  --mi-warn: #fbbf24;
+  --mi-warn-bg: rgba(251, 191, 36, 0.12);
+  --mi-radius: 10px;
+}
+
+.tool-meta-inspector * { box-sizing: border-box; }
+
+/* Originally: body { margin:0; width:460px; max-height:600px; ... } */
+.tool-meta-inspector {
+  margin: 0;
+  background: var(--mi-bg);
+  color: var(--mi-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.tool-meta-inspector .app { display: flex; flex-direction: column; }
+
+.tool-meta-inspector .app-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, var(--mi-accent), var(--mi-accent-2));
+  color: #fff;
+}
+.tool-meta-inspector .app-header .logo {
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.18);
+  border-radius: 8px;
+}
+.tool-meta-inspector .app-header h1 { font-size: 15px; margin: 0; font-weight: 700; letter-spacing: 0.2px; }
+.tool-meta-inspector .app-header p { font-size: 11px; margin: 1px 0 0; opacity: 0.85; }
+
+.tool-meta-inspector .app-main { padding: 16px 18px 8px; }
+
+.tool-meta-inspector .btn {
+  cursor: pointer;
+  border: none;
+  border-radius: var(--mi-radius);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 16px;
+  transition: transform 0.06s ease, opacity 0.15s ease;
+}
+.tool-meta-inspector .btn:active { transform: scale(0.98); }
+.tool-meta-inspector .btn-full { width: 100%; }
+.tool-meta-inspector .btn-primary {
+  background: linear-gradient(135deg, var(--mi-accent), var(--mi-accent-2));
+  color: #fff;
+}
+.tool-meta-inspector .btn-primary:hover { opacity: 0.92; }
+.tool-meta-inspector .btn-secondary {
+  background: var(--mi-panel-2);
+  color: var(--mi-text);
+  border: 1px solid var(--mi-border);
+  margin-top: 14px;
+}
+.tool-meta-inspector .btn-secondary:hover { background: #232838; }
+
+.tool-meta-inspector .btn-export {
+  background: var(--mi-panel-2);
+  color: var(--mi-good);
+  border: 1px solid var(--mi-good);
+  margin-top: 8px;
+}
+.tool-meta-inspector .btn-export:hover:not(:disabled) { background: var(--mi-good-bg); }
+.tool-meta-inspector .btn-export:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tool-meta-inspector .hidden { display: none !important; }
+
+.tool-meta-inspector .meta-summary {
+  margin-top: 16px;
+  background: var(--mi-panel);
+  border: 1px solid var(--mi-border);
+  border-radius: var(--mi-radius);
+  padding: 12px 14px;
+}
+.tool-meta-inspector .meta-row { padding: 6px 0; }
+.tool-meta-inspector .meta-row + .meta-row { border-top: 1px solid var(--mi-border); }
+.tool-meta-inspector .meta-label {
+  display: block;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--mi-text-dim);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.tool-meta-inspector .meta-value {
+  display: block;
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.tool-meta-inspector .meta-value.missing { color: var(--mi-bad); font-style: italic; }
+
+.tool-meta-inspector .compare-section { margin-top: 20px; }
+.tool-meta-inspector .compare-section h2 {
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--mi-text-dim);
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+
+.tool-meta-inspector .compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--mi-panel);
+  border: 1px solid var(--mi-border);
+  border-radius: var(--mi-radius);
+  overflow: hidden;
+  table-layout: fixed;
+}
+.tool-meta-inspector .compare-table th {
+  background: var(--mi-panel-2);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--mi-text-dim);
+  text-align: left;
+  padding: 8px 8px;
+  border-bottom: 1px solid var(--mi-border);
+}
+.tool-meta-inspector .compare-table th:nth-child(1) { width: 30%; }
+.tool-meta-inspector .compare-table th:nth-child(2) { width: 42%; }
+.tool-meta-inspector .compare-table th:nth-child(3) { width: 28%; }
+
+.tool-meta-inspector .compare-table td {
+  vertical-align: top;
+  padding: 8px;
+  border-bottom: 1px solid var(--mi-border);
+  font-size: 12px;
+}
+.tool-meta-inspector .compare-table tr:last-child td { border-bottom: none; }
+
+.tool-meta-inspector .row-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--mi-accent);
+  margin-bottom: 4px;
+}
+.tool-meta-inspector .actual-text {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--mi-text-dim);
+  word-break: break-word;
+  max-height: 90px;
+  overflow-y: auto;
+}
+
+.tool-meta-inspector textarea {
+  width: 100%;
+  resize: vertical;
+  background: var(--mi-bg);
+  border: 1px solid var(--mi-border);
+  border-radius: 6px;
+  color: var(--mi-text);
+  font-size: 11.5px;
+  font-family: inherit;
+  padding: 6px 7px;
+  line-height: 1.4;
+}
+.tool-meta-inspector textarea:focus {
+  outline: none;
+  border-color: var(--mi-accent);
+}
+
+.tool-meta-inspector .result-pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-align: center;
+  padding: 5px 6px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.tool-meta-inspector .result-pending { background: var(--mi-panel-2); color: var(--mi-text-dim); }
+.tool-meta-inspector .result-match { background: var(--mi-good-bg); color: var(--mi-good); }
+.tool-meta-inspector .result-partial { background: var(--mi-warn-bg); color: var(--mi-warn); }
+.tool-meta-inspector .result-mismatch { background: var(--mi-bad-bg); color: var(--mi-bad); }
+
+.tool-meta-inspector .empty-state {
+  margin-top: 18px;
+  text-align: center;
+  padding: 22px 10px;
+  border: 1px dashed var(--mi-border);
+  border-radius: var(--mi-radius);
+  color: var(--mi-text-dim);
+  font-size: 12px;
+}
+.tool-meta-inspector .empty-state p { margin: 0; line-height: 1.5; }
+
+.tool-meta-inspector .app-footer {
+  padding: 8px 18px 14px;
+  font-size: 10.5px;
+  color: var(--mi-text-dim);
+  text-align: right;
+  min-height: 14px;
+}

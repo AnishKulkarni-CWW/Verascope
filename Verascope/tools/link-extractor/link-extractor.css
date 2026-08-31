@@ -1,0 +1,32 @@
+/* Link & Text Extractor — the original reset `* { margin:0; padding:0 }`
+   globally and styled a bare `body`. Both are scoped under
+   .tool-link-extractor here so they can't strip spacing from the
+   shell tab bar or the other two tools' panes. */
+
+.tool-link-extractor, .tool-link-extractor * { margin: 0; padding: 0; box-sizing: border-box; }
+
+.tool-link-extractor {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #0f0f1a;
+  color: #fff;
+  overflow: hidden;
+}
+.tool-link-extractor .container { padding: 28px 24px 24px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.tool-link-extractor .logo-wrap { display: flex; align-items: center; gap: 10px; }
+.tool-link-extractor .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, #4f8ef7, #a259ff); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.tool-link-extractor .logo-text { font-size: 15px; font-weight: 700; letter-spacing: 0.3px; color: #e8e8f0; }
+.tool-link-extractor .logo-text span { color: #4f8ef7; }
+.tool-link-extractor .divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, #2a2a44, transparent); }
+.tool-link-extractor .desc { font-size: 12px; color: #8888aa; text-align: center; line-height: 1.6; }
+.tool-link-extractor .extract-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #4f8ef7 0%, #a259ff 100%); border: none; border-radius: 10px; color: #fff; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; cursor: pointer; transition: opacity 0.2s, transform 0.15s; }
+.tool-link-extractor .extract-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+.tool-link-extractor .extract-btn:active { transform: translateY(0); opacity: 1; }
+.tool-link-extractor .extract-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.tool-link-extractor .btn-inner { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.tool-link-extractor .status { width: 100%; min-height: 36px; border-radius: 8px; font-size: 12px; text-align: center; padding: 8px 12px; line-height: 1.5; display: none; }
+.tool-link-extractor .status.success { display: block; background: rgba(34,197,94,.12); border: 1px solid rgba(34,197,94,.3); color: #4ade80; }
+.tool-link-extractor .status.error   { display: block; background: rgba(239,68,68,.12);  border: 1px solid rgba(239,68,68,.3);  color: #f87171; }
+.tool-link-extractor .status.loading { display: block; background: rgba(79,142,247,.10); border: 1px solid rgba(79,142,247,.25); color: #7fb3ff; }
+.tool-link-extractor .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: link-extractor-spin .7s linear infinite; vertical-align: middle; margin-right: 5px; }
+@keyframes link-extractor-spin { to { transform: rotate(360deg); } }
+.tool-link-extractor .footer { font-size: 10px; color: #44445a; text-align: center; }

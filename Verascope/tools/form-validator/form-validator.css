@@ -1,0 +1,173 @@
+/* ============================================================
+   Tool 3 (replaced): Form QA Automation — was "Form Field
+   Validator" v1. This CSS is a full retheme of the uploaded
+   standalone extension's popup.css (:root{color-scheme:light;
+   ...}, white cards, dark-on-light throughout) to the shell's
+   dark palette, scoped under .tool-form-validator the same way
+   every tool in this shell is scoped, since this pane shares a
+   document with five others.
+
+   PALETTE: reuses the exact hex values already verified working
+   for Link Checker's own retheme (tools/link-checker/css/style.css
+   :root block) rather than inventing new numbers, so this tab and
+   Link Checker are visually indistinguishable in their base
+   surfaces/accent — that's what "matching seamlessly" means here:
+   not just "also dark," but the same dark.
+
+   Every layout, spacing, sizing, grid, and structural property
+   below is untouched from the original file — only color values
+   changed, plus the .tool-form-validator prefix on every selector
+   and the bare :root converted to a scoped block.
+   ============================================================ */
+
+.tool-form-validator {
+  --fv-bg: #0f1115;
+  --fv-panel: #161922;
+  --fv-panel-2: #1c2030;
+  --fv-border: #2a2f3f;
+  --fv-text: #e8eaf0;
+  --fv-text-dim: #9aa1b4;
+  --fv-accent: #5b8def;
+  --fv-accent-2: #7c6df0;
+  --fv-good: #34d399;
+  --fv-good-bg: rgba(52, 211, 153, 0.12);
+  --fv-bad: #f87171;
+  --fv-bad-bg: rgba(248, 113, 113, 0.12);
+  --fv-warn: #fbbf24;
+  --fv-warn-bg: rgba(251, 191, 36, 0.12);
+
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--fv-bg);
+  color: var(--fv-text);
+}
+.tool-form-validator * { box-sizing: border-box; }
+.tool-form-validator button,
+.tool-form-validator select,
+.tool-form-validator input { font: inherit; }
+.tool-form-validator button { cursor: pointer; }
+.tool-form-validator button:disabled { cursor: wait; opacity: .55; }
+
+.tool-form-validator header {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 16px; color: #fff;
+  background: linear-gradient(135deg, var(--fv-accent), var(--fv-accent-2));
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+.tool-form-validator h1,
+.tool-form-validator h2,
+.tool-form-validator p,
+.tool-form-validator dl,
+.tool-form-validator dt,
+.tool-form-validator dd { margin: 0; }
+.tool-form-validator h1 { font-size: 19px; letter-spacing: -.02em; }
+.tool-form-validator .eyebrow { margin-bottom: 3px; color: rgba(255,255,255,.75); font-size: 9px; font-weight: 800; letter-spacing: .14em; }
+.tool-form-validator .brand-row { display: flex; align-items: center; gap: 7px; }
+
+.tool-form-validator main { padding: 13px; }
+
+.tool-form-validator .scan-row { display: flex; align-items: center; gap: 8px; }
+.tool-form-validator .scan-row .primary.full { flex: 1; }
+.tool-form-validator .scan-row .mode-badge { flex: none; border: 1px solid var(--fv-border); border-radius: 999px; padding: 8px 11px; background: var(--fv-panel-2); color: var(--fv-accent); font-size: 10px; font-weight: 800; letter-spacing: .04em; }
+
+.tool-form-validator .primary,
+.tool-form-validator .secondary,
+.tool-form-validator .ghost,
+.tool-form-validator .danger { border-radius: 8px; padding: 10px 12px; font-size: 12px; font-weight: 750; transition: background .12s, border-color .12s, opacity .12s; }
+.tool-form-validator .primary { border: 0; background: linear-gradient(135deg, var(--fv-accent), var(--fv-accent-2)); color: #ffffff; }
+.tool-form-validator .primary:hover { opacity: .92; }
+.tool-form-validator .primary.full { width: 100%; padding: 13px; font-size: 13px; }
+.tool-form-validator .secondary { border: 1px solid var(--fv-border); background: var(--fv-panel-2); color: var(--fv-text); }
+.tool-form-validator .secondary:hover { background: #232838; }
+.tool-form-validator .ghost { border: 1px solid var(--fv-border); background: var(--fv-panel); color: var(--fv-text-dim); }
+.tool-form-validator .ghost.small { padding: 6px 10px; font-size: 11px; }
+.tool-form-validator .danger { border: 1px solid var(--fv-bad); background: var(--fv-bad-bg); color: var(--fv-bad); }
+
+.tool-form-validator .status,
+.tool-form-validator .progress { padding: 11px; border: 1px solid var(--fv-border); border-radius: 9px; background: var(--fv-panel); font-size: 12px; line-height: 1.45; margin-top: 9px; }
+.tool-form-validator .status { color: var(--fv-text-dim); }
+.tool-form-validator .status.error { border-color: var(--fv-bad); background: var(--fv-bad-bg); color: var(--fv-bad); }
+
+/* Dashboard */
+.tool-form-validator .dashboard { margin-top: 11px; }
+.tool-form-validator .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.tool-form-validator .metric { border: 1px solid var(--fv-border); border-radius: 10px; padding: 10px 6px; background: var(--fv-panel); text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+.tool-form-validator .metric-value { display: block; font-size: 19px; font-weight: 800; color: var(--fv-text); line-height: 1.1; }
+.tool-form-validator .metric-label { display: block; margin-top: 3px; color: var(--fv-text-dim); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+.tool-form-validator .metric.pass .metric-value { color: var(--fv-good); }
+.tool-form-validator .metric.fail .metric-value { color: var(--fv-bad); }
+.tool-form-validator .metric.warn .metric-value { color: var(--fv-warn); }
+
+.tool-form-validator .category-toggles { margin-top: 11px; border: 1px solid var(--fv-border); border-radius: 10px; padding: 10px; background: var(--fv-panel); }
+.tool-form-validator .toggles-heading { font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--fv-text-dim); margin-bottom: 7px; }
+.tool-form-validator .toggle-row { display: flex; flex-wrap: wrap; gap: 7px; }
+.tool-form-validator .toggle { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--fv-border); border-radius: 999px; padding: 5px 10px; font-size: 11px; font-weight: 600; color: var(--fv-text); background: var(--fv-panel-2); cursor: pointer; }
+.tool-form-validator .toggle input { accent-color: var(--fv-accent); }
+
+.tool-form-validator .toolbar { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
+.tool-form-validator .toolbar button { flex: 1 1 auto; }
+
+.tool-form-validator .progress > div { display: flex; justify-content: space-between; font-size: 11px; color: var(--fv-text-dim); }
+.tool-form-validator .progress progress { width: 100%; margin: 8px 0; accent-color: var(--fv-accent); }
+
+/* Results table */
+.tool-form-validator .results-section { margin-top: 12px; border: 1px solid var(--fv-border); border-radius: 10px; background: var(--fv-panel); overflow: hidden; }
+.tool-form-validator .results-toolbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; border-bottom: 1px solid var(--fv-border); background: var(--fv-panel-2); }
+.tool-form-validator .search-input { flex: 1 1 140px; border: 1px solid var(--fv-border); border-radius: 7px; padding: 7px 9px; font-size: 11px; background: var(--fv-panel); color: var(--fv-text); }
+.tool-form-validator .filter-select { border: 1px solid var(--fv-border); border-radius: 7px; padding: 7px 8px; font-size: 11px; background: var(--fv-panel); color: var(--fv-text); }
+.tool-form-validator .table-wrap { max-height: 280px; overflow: auto; }
+.tool-form-validator .results-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.tool-form-validator .results-table thead th { position: sticky; top: 0; background: var(--fv-panel-2); color: var(--fv-text); padding: 8px 7px; text-align: left; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; cursor: pointer; white-space: nowrap; border-bottom: 1px solid var(--fv-border); }
+.tool-form-validator .results-table tbody td { padding: 7px; border-bottom: 1px solid var(--fv-border); color: var(--fv-text); vertical-align: top; }
+.tool-form-validator .results-table tbody tr { cursor: pointer; }
+.tool-form-validator .results-table tbody tr:hover { background: #1a2436; }
+.tool-form-validator .results-table td.mono { font-family: ui-monospace, Consolas, monospace; font-size: 9.5px; color: var(--fv-text-dim); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tool-form-validator .row-fail { background: rgba(248, 113, 113, 0.06); }
+.tool-form-validator .row-warning { background: rgba(251, 191, 36, 0.06); }
+
+.tool-form-validator .badge { display: inline-block; border-radius: 999px; padding: 3px 8px; font-size: 9px; font-weight: 800; letter-spacing: .03em; }
+.tool-form-validator .badge-pass { background: var(--fv-good-bg); color: var(--fv-good); }
+.tool-form-validator .badge-fail { background: var(--fv-bad-bg); color: var(--fv-bad); }
+.tool-form-validator .badge-warning { background: var(--fv-warn-bg); color: var(--fv-warn); }
+
+.tool-form-validator .sev { display: inline-block; border-radius: 6px; padding: 2px 7px; font-size: 9px; font-weight: 800; color: #fff; }
+.tool-form-validator .sev-high { background: var(--fv-bad); }
+.tool-form-validator .sev-medium { background: #dd8e1a; }
+.tool-form-validator .sev-low { background: var(--fv-text-dim); }
+
+/* Detail panel */
+.tool-form-validator .detail-panel { margin-top: 12px; border: 1px solid var(--fv-border); border-radius: 10px; background: var(--fv-panel); padding: 12px; }
+.tool-form-validator .detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.tool-form-validator .detail-header h2 { font-size: 13px; color: var(--fv-text); }
+.tool-form-validator .detail-body { display: grid; grid-template-columns: 120px 1fr; gap: 6px 10px; font-size: 11px; }
+.tool-form-validator .detail-body dt { font-weight: 700; color: var(--fv-text-dim); }
+.tool-form-validator .detail-body dd { color: var(--fv-text); word-break: break-word; }
+
+/* Field cards */
+.tool-form-validator .fields { display: grid; gap: 10px; margin-top: 12px; }
+.tool-form-validator .field-card { overflow: hidden; border: 1px solid var(--fv-border); border-radius: 11px; background: var(--fv-panel); box-shadow: 0 3px 12px rgba(0,0,0,.25); }
+.tool-form-validator .field-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px; border-bottom: 1px solid var(--fv-border); }
+.tool-form-validator .field-label { font-size: 14px; line-height: 1.3; color: var(--fv-text); }
+.tool-form-validator .field-meta { margin-top: 3px; color: var(--fv-text-dim); font-size: 10px; }
+.tool-form-validator .case-count { flex: none; border-radius: 999px; padding: 4px 7px; background: var(--fv-panel-2); color: var(--fv-accent); font-size: 9px; font-weight: 700; }
+.tool-form-validator .orphan-badge { flex: none; border-radius: 999px; padding: 4px 7px; margin-right: 6px; background: var(--fv-warn-bg); color: var(--fv-warn); font-size: 9px; font-weight: 700; white-space: nowrap; cursor: help; }
+.tool-form-validator .rules { display: flex; flex-wrap: wrap; gap: 5px; padding: 9px 12px 0; }
+.tool-form-validator .unknown-banner { display: flex; align-items: flex-start; gap: 8px; margin: 9px 12px 0; padding: 9px 11px; border-radius: 8px; background: var(--fv-warn-bg); border-left: 3px solid var(--fv-warn); }
+.tool-form-validator .unknown-banner-icon { flex: none; margin-top: 1px; color: var(--fv-warn); }
+.tool-form-validator .unknown-banner-text { font-size: 11px; line-height: 1.5; color: var(--fv-text); }
+.tool-form-validator .rule { border-radius: 5px; padding: 3px 6px; background: var(--fv-panel-2); color: var(--fv-text-dim); font-size: 9px; }
+.tool-form-validator .field-actions { display: flex; justify-content: flex-end; padding: 8px 12px 0; }
+.tool-form-validator .cases { display: grid; gap: 6px; padding: 9px 12px 12px; }
+.tool-form-validator .case-button { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; width: 100%; border: 1px solid var(--fv-border); border-radius: 8px; padding: 8px; background: var(--fv-panel-2); color: var(--fv-text); text-align: left; }
+.tool-form-validator .case-button:hover { border-color: var(--fv-accent); background: #1a2436; }
+.tool-form-validator .case-label { font-size: 11px; font-weight: 700; }
+.tool-form-validator .case-value { display: block; overflow: hidden; margin-top: 2px; max-width: 260px; color: var(--fv-text-dim); font-family: ui-monospace, Consolas, monospace; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.tool-form-validator .expectation { border-radius: 999px; padding: 3px 6px; font-size: 8px; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
+.tool-form-validator .type-positive { background: var(--fv-good-bg); color: var(--fv-good); }
+.tool-form-validator .type-negative { background: var(--fv-bad-bg); color: var(--fv-bad); }
+.tool-form-validator .type-boundary { background: rgba(91, 141, 239, 0.14); color: var(--fv-accent); }
+.tool-form-validator .type-required { background: var(--fv-warn-bg); color: var(--fv-warn); }
+.tool-form-validator .type-accessibility { background: rgba(124, 109, 240, 0.16); color: var(--fv-accent-2); }
+
+.tool-form-validator [hidden] { display: none !important; }

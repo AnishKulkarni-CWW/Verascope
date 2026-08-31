@@ -1,0 +1,221 @@
+body{
+    background-color:#eee;
+    font-family:arial,sans-serif;
+    font-size:13px
+}
+
+#content{
+    background-color: white;
+    border: 1px solid #DDD;
+    margin: 40px auto 20px;
+    padding: 12px;
+    width: 500px;
+    -webkit-border-radius: 12px;
+    box-shadow: 0px 0px 10px #ddd;
+}
+
+h1{
+    color:#333333;
+    font-size:1.5em;
+    margin:0.7em 0 0;
+}
+
+
+p{
+    font-size: 12px;
+}
+
+.buttons{
+    clear:left;
+    padding:5px;
+    text-align: center;
+}
+
+#save_status{
+    background-color:#fff1a8;
+    font-weight:bold;
+    margin-left:10px;
+    opacity:0;
+    padding:3px;
+    border-radius:3px
+}
+
+.footer{
+    text-align:center;
+    margin-top:0.4em;
+    color: rgba(0,0,0,0.2);
+}
+
+.footer a{
+    color: #333;
+    text-shadow: 1px 1px 1px white;
+    text-decoration: none;
+    border: 1px solid #ddd;
+    padding: 5px;
+    background: -webkit-gradient(linear, center top, center bottom, from(white), to(#fafafa));
+    border-radius: 5px;
+}
+
+.footer a:hover{
+    color: #111;
+    text-shadow: 1px 1px 1px white;
+    text-decoration: underline;
+}
+
+#msg, #msgtop, #msgCache{
+    background: #090;
+    border-radius: 5px 5px;
+    color: #fff;
+    font-weight: bold;
+    padding: 5px;
+    text-align: center;
+}
+
+
+#blacklistEntries{
+    width: 500px;
+    height: 200px;
+}
+
+#logo{
+    background: -webkit-gradient(linear, center top, center bottom, from(white), to(#EEE));
+    padding: 15px 0px 10px 10px;
+    height: 30px;
+    border-bottom: 1px solid #DDD;
+    margin: -12px -12px 20px -12px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    text-shadow: 1px 1px 1px white;
+    color: #666;
+}
+
+span{
+    font-family: monospace;
+    background: #D9EDF7;
+    padding: 3px;
+    color: #3A87AD;
+    border-radius: 5px;
+}
+
+label{
+    font-weight: bold;
+}
+
+#support{
+    margin: 0px -12px 10px -12px;
+    background: #fff;
+    padding: 0px 10px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    text-align: center;
+
+}
+
+
+.option_row{
+    clear:left;
+}
+
+.option_name{
+    float:left;
+    font-weight:bold;
+    margin-top:3px;
+}
+
+.option_picker{
+    float:left
+}
+
+hr{
+    border: 1px solid #EEE;
+    border-bottom: none;
+    margin: 10px 0px;
+}
+
+.pr-inputs{
+    min-width: 100px;
+}
+
+
+
+/* ====== Basic layout & look ====== */
+.batch-group.active{
+  background: #fff;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e6e6e6;
+  transition: box-shadow 180ms ease, border-color 180ms ease, transform 180ms ease;
+  box-shadow: 0 0 0 rgba(0,0,0,0); /* initial no shadow */
+}
+
+
+/* ====== Highlight when checkbox inside is checked (modern browsers) ====== */
+.batch-group.active {
+  border-color: #2b6df6;            /* blue border */
+  box-shadow: 0 10px 30px rgba(43,109,246,0.12);
+  background: linear-gradient(180deg, rgba(43,109,246,0.02), rgba(43,109,246,0.00));
+}
+
+/* ====== Fallback highlight class (for JS toggling) ====== */
+.batch-group.highlight {
+  border-color: #2b6df6;
+  box-shadow: 0 10px 30px rgba(43,109,246,0.12);
+  background: linear-gradient(180deg, rgba(43,109,246,0.02), rgba(43,109,246,0.00));
+}
+
+/* ====== Small UI niceties ====== */
+.pr-inputs{
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #dcdcdc;
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.pr-inputs:focus{
+  border-color: #7da7ff;
+  box-shadow: 0 6px 14px rgba(125,167,255,0.12);
+}
+
+.error-box{
+  color: #b03030;
+  font-size: 12px;
+  margin-top: 6px;
+  min-height: 16px;
+}
+
+
+#savetop {
+    width: 100%;
+    background: linear-gradient(180deg, #d68a1a 0%, #ca7702 100%);
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 9px;
+    cursor: pointer;
+    letter-spacing: -0.2px;
+    box-shadow: 0 4px 12px rgba(202, 119, 2, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+
+#save {
+    width: 100%;
+    background: linear-gradient(180deg, #d68a1a 0%, #ca7702 100%);
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 9px;
+    cursor: pointer;
+    letter-spacing: -0.2px;
+    box-shadow: 0 4px 12px rgba(202, 119, 2, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+

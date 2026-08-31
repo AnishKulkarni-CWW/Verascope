@@ -1,0 +1,26 @@
+/* Alt Text Viewer — the original styled bare `body`, `h1`, `button`
+   and plain ids with no scoping at all. Every rule here is prefixed
+   with .tool-alt-text so it only ever applies inside this tool's
+   own pane, never shell-wide. */
+
+.tool-alt-text {
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 14px;
+  margin: 0;
+}
+.tool-alt-text h1 { font-size: 15px; margin: 0 0 10px 0; }
+.tool-alt-text button {
+  width: 100%;
+  padding: 9px 10px;
+  margin-bottom: 8px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.tool-alt-text #toggleBtn { background-color: #00FF7F; color: #000; }
+.tool-alt-text #toggleBtn.off { background-color: #eee; color: #333; }
+.tool-alt-text #exportBtn { background-color: #2b6cb0; color: #fff; }
+.tool-alt-text #exportBtn:disabled { background-color: #a0aec0; cursor: not-allowed; }
+.tool-alt-text #status { font-size: 11px; color: #666; margin-top: 4px; min-height: 14px; }
