@@ -129,7 +129,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 
 
 // ============================================================
-// Link Checker Pro — background subsystem
+// Link Checker Pro (v1.1) — background subsystem
 // Ported from the standalone "Link Checker Pro" extension's own
 // background.js. It replaces the old, much heavier "Check My
 // Links" clone that used to live here — that version depended on
@@ -137,22 +137,224 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 // DataTables, JSZip, PDF fonts) whose icon assets never shipped
 // with this repo, so every icon in its report broke with
 // net::ERR_FILE_NOT_FOUND and the tool was effectively unusable.
-// Link Checker Pro needs none of that: it checks link status from
-// here (the service worker) and reports results straight back to
-// the shell's own Crawler pane, the same pattern every other tool
-// in this popup already uses.
 //
-// Runs a HEAD (falling back to GET) fetch per link and classifies
-// the result. Cross-origin requests still tell us success/failure/
-// timeout even though the response body isn't readable.
+// v1.1 moved scan orchestration here entirely (out of the popup):
+// scan state now lives in chrome.storage.local, keyed by tab id, so
+// results survive the popup closing and even the source tab
+// closing. Every scan gets a monotonically increasing runId; any
+// in-flight status checks from a superseded run are ignored, which
+// is what fixed the OK/Broken counts changing randomly between
+// runs on the v1 popup-driven implementation (two scans' results
+// could race and get merged). Link collection now also queries
+// every frame on the tab (content.js is registered with
+// all_frames: true and walks open shadow DOM too), merged here via
+// chrome.webNavigation.getAllFrames.
 // ============================================================
+
+const lcpState = {
+  // tabId -> { runId, pageUrl, pageTitle, results: [...], status: 'collecting'|'checking'|'done' }
+};
+
+function lcpStorageKey(tabId) {
+  return `lcp_scan_${tabId}`;
+}
+
+async function lcpSaveState(tabId) {
+  const data = lcpState[tabId];
+  if (!data) return;
+  await chrome.storage.local.set({ [lcpStorageKey(tabId)]: data });
+}
+
+async function lcpLoadState(tabId) {
+  const key = lcpStorageKey(tabId);
+  const stored = await chrome.storage.local.get(key);
+  return stored[key] || null;
+}
+
+// ── Collect links from every frame in the tab ─────────────────────────────
+async function lcpCollectAllFrameLinks(tabId) {
+  let frames = [];
+  try {
+    frames = await chrome.webNavigation.getAllFrames({ tabId });
+  } catch (e) {
+    frames = [{ frameId: 0 }];
+  }
+
+  const merged = new Map();
+  let pageUrl = '';
+  let pageTitle = '';
+
+  for (const frame of frames || [{ frameId: 0 }]) {
+    try {
+      const response = await chrome.tabs.sendMessage(
+        tabId,
+        { type: 'LCP_COLLECT_LINKS' },
+        { frameId: frame.frameId }
+      );
+      if (!response) continue;
+      if (frame.frameId === 0) {
+        pageUrl = response.pageUrl;
+        pageTitle = response.pageTitle;
+      }
+      (response.links || []).forEach((l) => {
+        if (merged.has(l.href)) {
+          merged.get(l.href).occurrences += l.occurrences;
+        } else {
+          merged.set(l.href, { ...l });
+        }
+      });
+    } catch (e) {
+      // Frame may not have a content script (cross-origin, chrome://, etc.) — skip it.
+    }
+  }
+
+  return {
+    pageUrl,
+    pageTitle,
+    links: Array.from(merged.values())
+  };
+}
+
+// ── Run a full scan for a tab, guarded by runId so stale runs can't corrupt state ──
+async function lcpRunScan(tabId) {
+  const runId = Date.now() + Math.random();
+  lcpState[tabId] = {
+    runId,
+    pageUrl: '',
+    pageTitle: '',
+    results: [],
+    status: 'collecting',
+    completed: 0,
+    total: 0
+  };
+  await lcpSaveState(tabId);
+  lcpBroadcast(tabId, { type: 'LCP_SCAN_UPDATE', tabId });
+
+  const collected = await lcpCollectAllFrameLinks(tabId);
+
+  // Bail out if a newer scan has started while we were collecting.
+  if (!lcpState[tabId] || lcpState[tabId].runId !== runId) return;
+
+  const links = collected.links || [];
+  const results = links.map((l, i) => ({
+    index: i + 1,
+    href: l.href,
+    text: l.text,
+    scope: l.scope,
+    rel: l.rel,
+    nofollow: l.nofollow,
+    target: l.target,
+    location: l.location,
+    occurrences: l.occurrences,
+    status: 'pending',
+    httpStatus: null,
+    ms: null,
+    reason: ''
+  }));
+
+  lcpState[tabId] = {
+    runId,
+    pageUrl: collected.pageUrl,
+    pageTitle: collected.pageTitle,
+    results,
+    status: 'checking',
+    completed: 0,
+    total: results.length
+  };
+  await lcpSaveState(tabId);
+  lcpBroadcast(tabId, { type: 'LCP_SCAN_UPDATE', tabId });
+
+  if (results.length === 0) {
+    lcpState[tabId].status = 'done';
+    await lcpSaveState(tabId);
+    lcpBroadcast(tabId, { type: 'LCP_SCAN_UPDATE', tabId });
+    return;
+  }
+
+  const LCP_CONCURRENCY = 6;
+  let cursor = 0;
+
+  async function worker() {
+    while (true) {
+      // Stop immediately if this run has been superseded.
+      if (!lcpState[tabId] || lcpState[tabId].runId !== runId) return;
+
+      const idx = cursor++;
+      if (idx >= results.length) return;
+
+      const item = results[idx];
+      if (item.scope === 'anchor' || item.scope === 'mailto' || item.scope === 'tel') {
+        item.status = 'skipped';
+      } else {
+        const result = await checkLink(item.href, 8000);
+        // Re-check staleness AFTER the await — this is the critical guard
+        // that prevents a slow response from a previous run overwriting
+        // the current run's data with mismatched counts.
+        if (!lcpState[tabId] || lcpState[tabId].runId !== runId) return;
+        item.status = result.status;
+        item.httpStatus = result.httpStatus;
+        item.ms = result.ms;
+        item.reason = result.reason || '';
+      }
+
+      lcpState[tabId].completed++;
+      if (lcpState[tabId].completed % 4 === 0 || lcpState[tabId].completed === results.length) {
+        await lcpSaveState(tabId);
+        lcpBroadcast(tabId, { type: 'LCP_SCAN_UPDATE', tabId });
+      }
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(LCP_CONCURRENCY, results.length) }, () => worker());
+  await Promise.all(workers);
+
+  if (lcpState[tabId] && lcpState[tabId].runId === runId) {
+    lcpState[tabId].status = 'done';
+    await lcpSaveState(tabId);
+    lcpBroadcast(tabId, { type: 'LCP_SCAN_UPDATE', tabId });
+  }
+}
+
+function lcpBroadcast(tabId, message) {
+  chrome.runtime.sendMessage({ ...message }).catch(() => {});
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  if (msg && msg.type === 'LCP_CHECK_LINK') {
-    checkLink(msg.href, msg.timeout || 8000).then(sendResponse);
-    return true; // keep the message channel open for async response
+  if (msg && msg.type === 'LCP_START_SCAN') {
+    lcpRunScan(msg.tabId);
+    sendResponse({ ok: true });
+    return true;
+  }
+  if (msg && msg.type === 'LCP_GET_STATE') {
+    (async () => {
+      const live = lcpState[msg.tabId];
+      if (live) {
+        sendResponse(live);
+      } else {
+        const stored = await lcpLoadState(msg.tabId);
+        sendResponse(stored);
+      }
+    })();
+    return true;
+  }
+  if (msg && msg.type === 'LCP_CLEAR_STATE') {
+    delete lcpState[msg.tabId];
+    chrome.storage.local.remove(lcpStorageKey(msg.tabId));
+    sendResponse({ ok: true });
+    return true;
   }
 });
 
+// Clean up in-memory state when a tab is closed. Intentionally NOT deleting
+// chrome.storage.local here — that's what lets results survive after the
+// source tab is closed, per this tool's persistence design.
+chrome.tabs.onRemoved.addListener((tabId) => {
+  delete lcpState[tabId];
+});
+
+// Runs a HEAD (falling back to GET) fetch per link and classifies the
+// result. Cross-origin requests still tell us success/failure/timeout even
+// though the response body isn't readable.
 async function checkLink(href, timeoutMs) {
   const start = Date.now();
 

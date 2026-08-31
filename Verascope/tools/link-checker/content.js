@@ -1,20 +1,45 @@
 // Link Checker Pro — content script
-// Collects every <a> link on the page, from the very top of the DOM
-// (site nav / header) to the very bottom (footer), plus lets the
-// popup highlight links live on the page.
+// Registered with all_frames:true, so this runs in the top page AND every
+// same-origin iframe. Each frame collects its own links (including inside
+// open shadow DOM subtrees); the top frame then asks child frames for their
+// links via postMessage-free chrome messaging and merges everything.
 
 (function () {
   'use strict';
 
-  function collectLinks() {
+  const isTopFrame = window.self === window.top;
+  const FRAME_ID_ATTR = '__lcp_frame_marker__';
+
+  // ── Recursively walk shadow roots to find every <a href> element ────────
+  function collectAnchorsDeep(root, out) {
+    const anchors = root.querySelectorAll('a[href]');
+    anchors.forEach((a) => out.push(a));
+
+    // Walk every element looking for open shadow roots.
+    const all = root.querySelectorAll('*');
+    all.forEach((el) => {
+      if (el.shadowRoot) {
+        collectAnchorsDeep(el.shadowRoot, out);
+      }
+    });
+  }
+
+  function collectLinksInThisFrame() {
     const origin = window.location.origin;
-    const anchors = document.querySelectorAll('a[href]');
+    const anchorEls = [];
+    collectAnchorsDeep(document, anchorEls);
+
     const seen = new Map();
     const links = [];
 
-    anchors.forEach((a, domIndex) => {
+    anchorEls.forEach((a, domIndex) => {
       const rawHref = a.getAttribute('href') || '';
-      const href = a.href; // resolved absolute URL
+      let href;
+      try {
+        href = a.href;
+      } catch (e) {
+        return;
+      }
 
       if (!href || rawHref.trim() === '' || rawHref.trim().toLowerCase().startsWith('javascript:')) {
         return;
@@ -34,12 +59,13 @@
       const nofollow = rel.includes('nofollow');
       const text = (a.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 140);
 
-      // Rough page location: which landmark region the link lives in.
       let location = 'body';
       if (a.closest('header, nav, [role="navigation"], [role="banner"]')) location = 'header/nav';
       else if (a.closest('footer, [role="contentinfo"]')) location = 'footer';
       else if (a.closest('aside, [role="complementary"]')) location = 'sidebar';
       else if (a.closest('main, article, [role="main"]')) location = 'main content';
+
+      if (!isTopFrame) location = 'iframe';
 
       const key = href;
       if (seen.has(key)) {
@@ -67,18 +93,18 @@
     return {
       pageUrl: window.location.href,
       pageTitle: document.title,
-      totalAnchors: anchors.length,
+      totalAnchors: anchorEls.length,
       links
     };
   }
 
+  // ── Highlighting ──────────────────────────────────────────────────────
   function applyHighlight(enabled) {
-    document.querySelectorAll('a[href]').forEach((a) => {
-      if (enabled) {
-        a.classList.add('__lcp_highlight__');
-      } else {
-        a.classList.remove('__lcp_highlight__');
-      }
+    const anchorEls = [];
+    collectAnchorsDeep(document, anchorEls);
+    anchorEls.forEach((a) => {
+      if (enabled) a.classList.add('__lcp_highlight__');
+      else a.classList.remove('__lcp_highlight__');
     });
   }
 
@@ -104,19 +130,20 @@
   function highlightBroken(brokenHrefs) {
     ensureHighlightStyle();
     const set = new Set(brokenHrefs);
-    document.querySelectorAll('a[href]').forEach((a) => {
-      if (set.has(a.href)) {
-        a.classList.add('__lcp_highlight_broken__');
-        a.scrollIntoView; // no-op reference, avoids tree-shaking in some bundlers
-      } else {
-        a.classList.remove('__lcp_highlight_broken__');
-      }
+    const anchorEls = [];
+    collectAnchorsDeep(document, anchorEls);
+    anchorEls.forEach((a) => {
+      if (set.has(a.href)) a.classList.add('__lcp_highlight_broken__');
+      else a.classList.remove('__lcp_highlight_broken__');
     });
   }
 
+  // ── Message handling ───────────────────────────────────────────────────
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg && msg.type === 'LCP_COLLECT_LINKS') {
-      sendResponse(collectLinks());
+      // Only the top frame responds with the merged summary shape;
+      // background.js separately queries every frame and merges.
+      sendResponse(collectLinksInThisFrame());
       return true;
     }
     if (msg && msg.type === 'LCP_HIGHLIGHT_ALL') {
@@ -131,7 +158,7 @@
       return true;
     }
     if (msg && msg.type === 'LCP_OPEN_URL') {
-      window.open(msg.url, '_blank');
+      if (isTopFrame) window.open(msg.url, '_blank');
       sendResponse({ ok: true });
       return true;
     }

@@ -1,33 +1,45 @@
 // ============================================================
-// Tool 6 (replaced): Broken Link Crawler — popup script.
+// Tool 6: Broken Link Crawler — popup script (Link Checker Pro v1.1).
 // Ported from the standalone "Link Checker Pro" extension's own
 // popup.js. IIFE-wrapped and pane-scoped like every other tool
 // script sharing this document — all getElementById() calls from
-// the original became pane.querySelector() so this tool's ids
-// (many generic: "search-box", "table-body", "empty-state") can't
-// collide with the other six tools' markup. window.LinkCheckerTool
-// exposes init(), called by the shell's popup.js the first time
-// this tab is opened, matching every other tool's pattern — the
-// original's own top-level init() call at file end was removed in
-// favor of that. Scan/check/export logic is otherwise unchanged.
+// the original became pane.querySelector(). ExcelJS is loaded once
+// for the whole shell (libs/exceljs_bundle.js, already used by Meta
+// Inspector's export elsewhere) rather than bundling this tool's
+// own second copy, unlike the standalone extension's own
+// exceljs.min.js — same library, one fewer 900KB file in the repo.
+//
+// The popup no longer owns scan state or performs the link checks
+// itself. All of that lives in background.js, keyed by tabId and
+// persisted to chrome.storage.local. This popup just:
+//   1. Tells background.js to start a scan for the current tab.
+//   2. Polls background.js for the latest state and renders it.
+//   3. Reads whatever state already exists for this tab when
+//      opened, so results reappear even if the page tab was closed
+//      and reopened, or the popup itself was closed mid-scan.
+// window.LinkCheckerTool.init() re-runs the same init() the
+// original ran unconditionally at load, since re-entering this tab
+// should re-sync from whatever the background scan is doing now.
 // ============================================================
 (function () {
   'use strict';
 
   const pane = document.querySelector('[data-tool-pane="link-checker"]');
 
-  const CONCURRENCY = 6;
   const PAGE_SIZE = 12;
+  const POLL_MS = 500;
 
-  // ── State ──────────────────────────────────────────────────────────────
+  // ── State (mirrors background.js's per-tab state) ─────────────────────
+  let currentTabId = null;
   let pageInfo = { pageUrl: '', pageTitle: '' };
-  let allResults = [];       // full result objects
-  let filteredResults = [];  // after search + pill filter
+  let allResults = [];
+  let filteredResults = [];
   let currentFilter = 'all';
   let searchTerm = '';
   let currentPage = 1;
-  let isScanning = false;
+  let scanStatusValue = 'idle'; // idle | collecting | checking | done
   let highlightOn = false;
+  let pollTimer = null;
 
   // ── DOM refs ───────────────────────────────────────────────────────────
   const $ = (id) => pane.querySelector('#' + id);
@@ -49,6 +61,7 @@
   const filterRow = $('lc-filter-row');
   const filterPills = $('lc-filter-pills');
   const searchBox = $('lc-search-box');
+  const btnCopyAll = $('lc-btn-copy-all');
 
   const tableWrap = $('lc-table-wrap');
   const tableBody = $('lc-table-body');
@@ -61,6 +74,79 @@
 
   const chkHighlight = $('lc-chk-highlight');
   const btnExport = $('lc-btn-export');
+
+  function stopPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = null;
+  }
+
+  function startPolling() {
+    stopPolling();
+    pollTimer = setInterval(() => refreshFromBackground(false), POLL_MS);
+  }
+
+  // ── Pull latest state from background and re-render ────────────────────
+  async function refreshFromBackground(isInitialLoad) {
+    if (currentTabId === null) return;
+    chrome.runtime.sendMessage({ type: 'LCP_GET_STATE', tabId: currentTabId }, (data) => {
+      if (chrome.runtime.lastError) return;
+      if (!data) {
+        // No scan has ever run for this tab — leave the empty state as-is.
+        return;
+      }
+      applyState(data, isInitialLoad);
+    });
+  }
+
+  function applyState(data, isInitialLoad) {
+    pageInfo = { pageUrl: data.pageUrl, pageTitle: data.pageTitle };
+    if (data.pageUrl) {
+      pageUrlEl.textContent = data.pageUrl;
+      pageUrlEl.title = data.pageUrl;
+    }
+    allResults = data.results || [];
+    scanStatusValue = data.status || 'idle';
+
+    if (scanStatusValue === 'collecting') {
+      btnScan.disabled = true;
+      btnScanLabel.textContent = 'Scanning…';
+      scanStatus.textContent = 'Collecting links from the page (including frames)…';
+      progressTrack.style.display = 'block';
+      progressFill.style.width = '5%';
+    } else if (scanStatusValue === 'checking') {
+      btnScan.disabled = true;
+      btnScanLabel.textContent = 'Scanning…';
+      const total = data.total || allResults.length || 1;
+      const completed = data.completed || 0;
+      const pct = Math.round((completed / total) * 100);
+      scanStatus.textContent = `Checked ${completed} of ${total} links…`;
+      progressTrack.style.display = 'block';
+      progressFill.style.width = pct + '%';
+    } else if (scanStatusValue === 'done') {
+      btnScan.disabled = false;
+      btnScanLabel.textContent = 'Re-Analyze All Links on This Page';
+      scanStatus.textContent = allResults.length
+        ? `Done — ${allResults.length} link${allResults.length === 1 ? '' : 's'} checked.`
+        : 'No links found on this page.';
+      progressTrack.style.display = 'none';
+      btnExport.disabled = allResults.length === 0;
+    } else {
+      btnScan.disabled = false;
+      btnScanLabel.textContent = 'Analyze All Links on This Page';
+      progressTrack.style.display = 'none';
+    }
+
+    if (allResults.length > 0) {
+      statsBar.style.display = 'flex';
+      filterRow.style.display = 'block';
+    }
+
+    applyFiltersAndRender();
+
+    if (isInitialLoad && highlightOn) {
+      pushHighlight();
+    }
+  }
 
   // ── Helpers ────────────────────────────────────────────────────────────
   function escapeHtml(str) {
@@ -76,141 +162,50 @@
 
   function sendToActiveTab(message) {
     return new Promise((resolve) => {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (!tabs[0]) return resolve(null);
-        chrome.tabs.sendMessage(tabs[0].id, message, (response) => {
-          if (chrome.runtime.lastError) {
-            resolve(null);
-          } else {
-            resolve(response);
-          }
-        });
+      if (currentTabId === null) return resolve(null);
+      chrome.tabs.sendMessage(currentTabId, message, (response) => {
+        if (chrome.runtime.lastError) resolve(null);
+        else resolve(response);
       });
     });
   }
 
-  function checkLinkStatus(href) {
-    return new Promise((resolve) => {
-      chrome.runtime.sendMessage({ type: 'LCP_CHECK_LINK', href }, (res) => {
-        if (chrome.runtime.lastError || !res) {
-          resolve({ status: 'unverified', httpStatus: null, ms: 0, reason: 'no response' });
-        } else {
-          resolve(res);
-        }
-      });
-    });
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (e) {
+      // Fallback for contexts where clipboard API is blocked.
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        return true;
+      } catch (e2) {
+        document.body.removeChild(ta);
+        return false;
+      }
+    }
   }
 
-  // ── Scan flow ──────────────────────────────────────────────────────────
-  async function onScan() {
-    if (isScanning) return;
-    isScanning = true;
+  // ── Scan trigger ───────────────────────────────────────────────────────
+  btnScan.addEventListener('click', () => {
+    if (currentTabId === null) return;
     btnScan.disabled = true;
     btnScanLabel.textContent = 'Scanning…';
-    scanStatus.textContent = 'Collecting links from the page…';
-    progressTrack.style.display = 'block';
-    progressFill.style.width = '0%';
-    btnExport.disabled = true;
-
-    allResults = [];
-    filteredResults = [];
+    scanStatus.textContent = 'Starting scan…';
     currentPage = 1;
     currentFilter = 'all';
     searchTerm = '';
     searchBox.value = '';
     setActivePill('all');
-
-    const collected = await sendToActiveTab({ type: 'LCP_COLLECT_LINKS' });
-
-    if (!collected || !collected.links) {
-      scanStatus.textContent = 'Could not read this page. Try reloading the tab and scanning again.';
-      resetScanButton();
-      return;
-    }
-
-    pageInfo = { pageUrl: collected.pageUrl, pageTitle: collected.pageTitle };
-    pageUrlEl.textContent = collected.pageUrl;
-
-    const links = collected.links;
-    const total = links.length;
-
-    if (total === 0) {
-      scanStatus.textContent = 'No links found on this page.';
-      resetScanButton();
-      renderTable();
-      return;
-    }
-
-    // Seed placeholder rows so the table + stats appear immediately.
-    allResults = links.map((l, i) => ({
-      index: i + 1,
-      href: l.href,
-      text: l.text,
-      scope: l.scope,
-      rel: l.rel,
-      nofollow: l.nofollow,
-      target: l.target,
-      location: l.location,
-      occurrences: l.occurrences,
-      status: 'pending',
-      httpStatus: null,
-      ms: null
-    }));
-
-    statsBar.style.display = 'flex';
-    filterRow.style.display = 'block';
-    applyFiltersAndRender();
-
-    let completed = 0;
-    scanStatus.textContent = `Checking ${total} link${total === 1 ? '' : 's'}…`;
-
-    // Throttled concurrent checks (skip anchor/mailto/tel — nothing to verify).
-    let cursor = 0;
-    async function worker() {
-      while (cursor < allResults.length) {
-        const idx = cursor++;
-        const item = allResults[idx];
-
-        if (item.scope === 'anchor' || item.scope === 'mailto' || item.scope === 'tel') {
-          item.status = 'skipped';
-        } else {
-          const result = await checkLinkStatus(item.href);
-          item.status = result.status;
-          item.httpStatus = result.httpStatus;
-          item.ms = result.ms;
-          item.reason = result.reason || '';
-        }
-
-        completed++;
-        const pct = Math.round((completed / total) * 100);
-        progressFill.style.width = pct + '%';
-        scanStatus.textContent = `Checked ${completed} of ${total} links…`;
-
-        if (completed % 5 === 0 || completed === total) {
-          applyFiltersAndRender();
-        }
-      }
-    }
-
-    const workers = Array.from({ length: Math.min(CONCURRENCY, total) }, () => worker());
-    await Promise.all(workers);
-
-    applyFiltersAndRender();
-    scanStatus.textContent = `Done — ${total} link${total === 1 ? '' : 's'} checked.`;
-    resetScanButton();
-    btnExport.disabled = false;
-
-    if (highlightOn) {
-      pushHighlight();
-    }
-  }
-
-  function resetScanButton() {
-    isScanning = false;
-    btnScan.disabled = false;
-    btnScanLabel.textContent = 'Re-Analyze All Links on This Page';
-    progressTrack.style.display = 'none';
-  }
+    chrome.runtime.sendMessage({ type: 'LCP_START_SCAN', tabId: currentTabId });
+  });
 
   // ── Filtering + rendering ─────────────────────────────────────────────
   function setActivePill(filter) {
@@ -240,6 +235,9 @@
   }
 
   function updateStats() {
+    // Only terminal (non-pending) states are counted, so numbers don't
+    // jump around while a scan is still in progress — a pending link
+    // that hasn't been checked yet is never counted as OK or Broken.
     const counts = { ok: 0, broken: 0, redirect: 0, slow: 0, unverified: 0 };
     allResults.forEach((r) => {
       if (r.status === 'ok') counts.ok++;
@@ -279,7 +277,7 @@
       pagination.style.display = 'none';
       emptyState.style.display = 'block';
       emptyState.querySelector('p').textContent = allResults.length === 0
-        ? 'Click "Analyze All Links" above to scan every link on this page — from the top navigation to the footer.'
+        ? 'Click "Analyze All Links" above to scan every link on this page — from the top navigation to the footer, including menus and embedded frames.'
         : 'No links match this filter.';
       return;
     }
@@ -300,12 +298,20 @@
           <td>${r.index}</td>
           <td>${statusBadge(r.status)}</td>
           <td>
-            <a class="link-cell" data-href="${escapeHtml(r.href)}" title="${escapeHtml(r.href)}">${escapeHtml(shortenUrl(r.href, 42))}</a>
-            <span class="link-text-sub" title="${escapeHtml(r.text)}">${escapeHtml(shortenUrl(r.text, 42))}</span>
+            <a class="link-cell" data-href="${escapeHtml(r.href)}" title="${escapeHtml(r.href)}">${escapeHtml(shortenUrl(r.href, 34))}</a>
+            <span class="link-text-sub" title="${escapeHtml(r.text)}">${escapeHtml(shortenUrl(r.text, 34))}</span>
           </td>
           <td><span class="loc-tag">${escapeHtml(r.location)}</span></td>
           <td>${codeText}</td>
           <td>${timeText}</td>
+          <td>
+            <button class="copy-btn" data-href="${escapeHtml(r.href)}" title="Copy this URL" type="button">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </td>
         </tr>
       `;
     }).join('');
@@ -318,15 +324,40 @@
       });
     });
 
+    tableBody.querySelectorAll('.copy-btn').forEach((el) => {
+      el.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const url = el.dataset.href;
+        const ok = await copyText(url);
+        if (ok) {
+          el.classList.add('copied');
+          setTimeout(() => el.classList.remove('copied'), 1200);
+        }
+      });
+    });
+
     pagination.style.display = totalPages > 1 ? 'flex' : 'none';
     pageInfoEl.textContent = `Page ${currentPage} of ${totalPages}`;
     pagePrev.disabled = currentPage <= 1;
     pageNext.disabled = currentPage >= totalPages;
   }
 
-  // ── Event listeners ────────────────────────────────────────────────────
-  btnScan.addEventListener('click', onScan);
+  // ── Copy all (visible/filtered) URLs at once ───────────────────────────
+  btnCopyAll.addEventListener('click', async () => {
+    if (!filteredResults.length) return;
+    const text = filteredResults.map((r) => r.href).join('\n');
+    const ok = await copyText(text);
+    if (ok) {
+      btnCopyAll.textContent = `Copied ${filteredResults.length}!`;
+      btnCopyAll.classList.add('copied');
+      setTimeout(() => {
+        btnCopyAll.textContent = 'Copy All';
+        btnCopyAll.classList.remove('copied');
+      }, 1400);
+    }
+  });
 
+  // ── Event listeners ────────────────────────────────────────────────────
   filterPills.addEventListener('click', (e) => {
     const btn = e.target.closest('.pill');
     if (!btn) return;
@@ -370,19 +401,18 @@
     }
   }
 
-  // ── Excel export ───────────────────────────────────────────────────────
-  btnExport.addEventListener('click', exportToExcel);
+  // ── Excel export — polished, professional formatting (ExcelJS) ────────
+  btnExport.addEventListener('click', () => {
+    exportToExcel().catch((err) => {
+      console.error('Export failed', err);
+      scanStatus.textContent = 'Export failed — see console for details.';
+    });
+  });
 
   function statusLabelForExport(status) {
     const map = {
-      ok: 'OK',
-      broken: 'Broken',
-      redirect: 'Redirect',
-      slow: 'Slow',
-      unverified: 'Unverified',
-      timeout: 'Timeout',
-      skipped: 'Skipped (non-HTTP)',
-      pending: 'Not checked'
+      ok: 'OK', broken: 'Broken', redirect: 'Redirect', slow: 'Slow',
+      unverified: 'Unverified', timeout: 'Timeout', skipped: 'Skipped (non-HTTP)', pending: 'Not checked'
     };
     return map[status] || status;
   }
@@ -392,66 +422,183 @@
     return map[scope] || scope;
   }
 
-  function exportToExcel() {
+  const NAVY = 'FF1F3B73';
+  const WHITE = 'FFFFFFFF';
+  const BAND = 'FFF3F6FC';
+  const BORDER = 'FFD9DEE8';
+  const GREEN_BG = 'FFDCFCE7';
+  const GREEN_TEXT = 'FF166534';
+  const RED_BG = 'FFFEE2E2';
+  const RED_TEXT = 'FF991B1B';
+  const AMBER_BG = 'FFFEF3C7';
+  const AMBER_TEXT = 'FF92400E';
+  const GRAY_BG = 'FFF1F2F5';
+  const GRAY_TEXT = 'FF4B5563';
+
+  function thinBorder() {
+    return {
+      top: { style: 'thin', color: { argb: BORDER } },
+      left: { style: 'thin', color: { argb: BORDER } },
+      bottom: { style: 'thin', color: { argb: BORDER } },
+      right: { style: 'thin', color: { argb: BORDER } }
+    };
+  }
+
+  async function exportToExcel() {
     if (!allResults.length) return;
 
-    const rows = allResults.map((r) => ({
-      '#': r.index,
-      'Status': statusLabelForExport(r.status),
-      'HTTP Code': r.httpStatus || '',
-      'Response Time (ms)': (r.ms !== null && r.ms !== undefined) ? r.ms : '',
-      'Link URL': r.href,
-      'Anchor Text': r.text,
-      'Location': r.location,
-      'Link Type': scopeLabel(r.scope),
-      'Rel Attribute': r.rel,
-      'Nofollow': r.nofollow ? 'Yes' : 'No',
-      'Target': r.target,
-      'Occurrences': r.occurrences,
-      'Notes': r.reason || ''
-    }));
+    const originalLabel = btnExport.innerHTML;
+    btnExport.disabled = true;
 
-    const wb = XLSX.utils.book_new();
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'Verascope — Broken Link Crawler';
+    wb.created = new Date();
 
-    // ── Summary sheet ──
+    // ── Summary sheet ──────────────────────────────────────────────────
     const counts = { ok: 0, broken: 0, redirect: 0, slow: 0, unverified: 0, skipped: 0 };
     allResults.forEach((r) => {
       if (r.status === 'timeout') counts.broken++;
       else if (counts.hasOwnProperty(r.status)) counts[r.status]++;
     });
 
-    const summaryData = [
-      ['Link Checker — Scan Report'],
-      [],
+    const summary = wb.addWorksheet('Summary', {
+      views: [{ showGridLines: false }]
+    });
+    summary.columns = [{ width: 26 }, { width: 64 }];
+
+    summary.mergeCells('A1:B1');
+    const titleCell = summary.getCell('A1');
+    titleCell.value = 'Broken Link Crawler — Scan Report';
+    titleCell.font = { bold: true, size: 18, color: { argb: NAVY } };
+    summary.getRow(1).height = 28;
+
+    const metaRows = [
       ['Page URL', pageInfo.pageUrl || ''],
       ['Page Title', pageInfo.pageTitle || ''],
-      ['Scan Date', new Date().toLocaleString()],
-      [],
-      ['Metric', 'Count'],
-      ['Total Links', allResults.length],
-      ['OK', counts.ok],
-      ['Broken', counts.broken],
-      ['Redirects', counts.redirect],
-      ['Slow (>3s)', counts.slow],
-      ['Unverified', counts.unverified],
-      ['Skipped (non-HTTP)', counts.skipped]
+      ['Scan Date', new Date().toLocaleString()]
     ];
-    const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
-    summaryWs['!cols'] = [{ wch: 22 }, { wch: 60 }];
-    summaryWs['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
-    styleSummarySheet(summaryWs);
-    XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
+    metaRows.forEach(([label, value], i) => {
+      const rowNum = i + 3;
+      const labelCell = summary.getCell(`A${rowNum}`);
+      const valueCell = summary.getCell(`B${rowNum}`);
+      labelCell.value = label;
+      labelCell.font = { bold: true, color: { argb: GRAY_TEXT } };
+      valueCell.value = value;
+    });
 
-    // ── Data sheet ──
-    const dataWs = XLSX.utils.json_to_sheet(rows);
-    dataWs['!cols'] = [
-      { wch: 4 }, { wch: 12 }, { wch: 9 }, { wch: 10 }, { wch: 55 },
-      { wch: 30 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 9 },
-      { wch: 8 }, { wch: 11 }, { wch: 16 }
+    const headerRowNum = 7;
+    const headerRow = summary.getRow(headerRowNum);
+    headerRow.getCell(1).value = 'Metric';
+    headerRow.getCell(2).value = 'Count';
+    [1, 2].forEach((c) => {
+      const cell = headerRow.getCell(c);
+      cell.font = { bold: true, color: { argb: WHITE } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: NAVY } };
+      cell.border = thinBorder();
+      cell.alignment = { vertical: 'middle' };
+    });
+
+    const metrics = [
+      ['Total Links', allResults.length, null],
+      ['OK', counts.ok, GREEN_TEXT],
+      ['Broken', counts.broken, RED_TEXT],
+      ['Redirects', counts.redirect, AMBER_TEXT],
+      ['Slow (>3s)', counts.slow, AMBER_TEXT],
+      ['Unverified', counts.unverified, GRAY_TEXT],
+      ['Skipped (non-HTTP)', counts.skipped, GRAY_TEXT]
     ];
-    dataWs['!autofilter'] = { ref: dataWs['!ref'] };
-    styleDataSheet(dataWs, rows.length);
-    XLSX.utils.book_append_sheet(wb, dataWs, 'Link Data');
+    metrics.forEach(([label, value, color], i) => {
+      const rowNum = headerRowNum + 1 + i;
+      const row = summary.getRow(rowNum);
+      row.getCell(1).value = label;
+      row.getCell(2).value = value;
+      const isBand = (i % 2 === 1);
+      [1, 2].forEach((c) => {
+        const cell = row.getCell(c);
+        cell.border = thinBorder();
+        if (isBand) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BAND } };
+      });
+      row.getCell(2).font = { bold: true, color: { argb: color || 'FF1F2430' } };
+    });
+
+    // ── Data sheet ────────────────────────────────────────────────────
+    const data = wb.addWorksheet('Link Data', {
+      views: [{ state: 'frozen', ySplit: 1 }]
+    });
+
+    const columns = [
+      { header: '#', key: 'index', width: 6 },
+      { header: 'Status', key: 'status', width: 14 },
+      { header: 'HTTP Code', key: 'httpCode', width: 11 },
+      { header: 'Response Time (ms)', key: 'ms', width: 16 },
+      { header: 'Link URL', key: 'url', width: 60 },
+      { header: 'Anchor Text', key: 'text', width: 32 },
+      { header: 'Location', key: 'location', width: 14 },
+      { header: 'Link Type', key: 'linkType', width: 12 },
+      { header: 'Rel Attribute', key: 'rel', width: 14 },
+      { header: 'Nofollow', key: 'nofollow', width: 10 },
+      { header: 'Target', key: 'target', width: 9 },
+      { header: 'Occurrences', key: 'occurrences', width: 12 },
+      { header: 'Notes', key: 'notes', width: 22 }
+    ];
+    data.columns = columns;
+
+    const headerRowData = data.getRow(1);
+    headerRowData.height = 22;
+    headerRowData.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: WHITE }, size: 11 };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: NAVY } };
+      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+      cell.border = thinBorder();
+    });
+
+    allResults.forEach((r, i) => {
+      const row = data.addRow({
+        index: r.index,
+        status: statusLabelForExport(r.status),
+        httpCode: r.httpStatus || '',
+        ms: (r.ms !== null && r.ms !== undefined) ? r.ms : '',
+        url: r.href,
+        text: r.text,
+        location: r.location,
+        linkType: scopeLabel(r.scope),
+        rel: r.rel,
+        nofollow: r.nofollow ? 'Yes' : 'No',
+        target: r.target,
+        occurrences: r.occurrences,
+        notes: r.reason || ''
+      });
+
+      // Make the URL a clickable hyperlink.
+      const urlCell = row.getCell('url');
+      if (/^https?:\/\//i.test(r.href)) {
+        urlCell.value = { text: r.href, hyperlink: r.href };
+        urlCell.font = { color: { argb: 'FF3D63D9' }, underline: true, size: 10.5 };
+      }
+
+      const isBand = (i % 2 === 1);
+      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        cell.border = thinBorder();
+        if (isBand) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BAND } };
+        cell.alignment = { vertical: 'middle', horizontal: colNumber === 1 ? 'center' : 'left' };
+        if (!cell.font) cell.font = { size: 10.5 };
+      });
+
+      const statusCell = row.getCell('status');
+      const val = statusCell.value;
+      let bg = null, fg = 'FF1F2430';
+      if (val === 'OK') { bg = GREEN_BG; fg = GREEN_TEXT; }
+      else if (val === 'Broken' || val === 'Timeout') { bg = RED_BG; fg = RED_TEXT; }
+      else if (val === 'Redirect' || val === 'Slow') { bg = AMBER_BG; fg = AMBER_TEXT; }
+      else if (typeof val === 'string' && (val.startsWith('Unverified') || val.startsWith('Skipped'))) { bg = GRAY_BG; fg = GRAY_TEXT; }
+      if (bg) {
+        statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+        statusCell.font = { bold: true, color: { argb: fg }, size: 10.5 };
+        statusCell.alignment = { vertical: 'middle', horizontal: 'center' };
+      }
+    });
+
+    data.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: columns.length } };
 
     const safeName = (pageInfo.pageUrl || 'report')
       .replace(/^https?:\/\//, '')
@@ -460,65 +607,32 @@
       .replace(/^-+|-+$/g, '')
       .slice(0, 60) || 'report';
 
-    XLSX.writeFile(wb, `LinkChecker_${safeName}.xlsx`);
-  }
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `LinkChecker_${safeName}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
 
-  function styleSummarySheet(ws) {
-    if (ws['A1']) {
-      ws['A1'].s = { font: { bold: true, sz: 16, color: { rgb: '5B8DEF' } } };
-    }
-    ['A7', 'B7'].forEach((addr) => {
-      if (ws[addr]) {
-        ws[addr].s = {
-          font: { bold: true, color: { rgb: 'FFFFFF' } },
-          fill: { fgColor: { rgb: '5B8DEF' } }
-        };
-      }
-    });
-    ['A3', 'A4', 'A5'].forEach((addr) => {
-      if (ws[addr]) ws[addr].s = { font: { bold: true } };
-    });
-  }
-
-  function styleDataSheet(ws, rowCount) {
-    const cols = 13;
-    for (let c = 0; c < cols; c++) {
-      const addr = XLSX.utils.encode_cell({ r: 0, c });
-      if (ws[addr]) {
-        ws[addr].s = {
-          font: { bold: true, color: { rgb: 'FFFFFF' } },
-          fill: { fgColor: { rgb: '5B8DEF' } },
-          alignment: { vertical: 'center' }
-        };
-      }
-    }
-    for (let r = 1; r <= rowCount; r++) {
-      const statusAddr = XLSX.utils.encode_cell({ r, c: 1 });
-      const cell = ws[statusAddr];
-      if (!cell) continue;
-      const val = String(cell.v || '');
-      let rgb = null;
-      if (val === 'OK') rgb = 'DCFCE7';
-      else if (val === 'Broken' || val === 'Timeout') rgb = 'FEE2E2';
-      else if (val === 'Redirect' || val === 'Slow') rgb = 'FEF3C7';
-      else if (val.startsWith('Unverified') || val.startsWith('Skipped')) rgb = 'F1F2F5';
-      if (rgb) {
-        cell.s = { fill: { fgColor: { rgb } }, font: { bold: true } };
-      }
-    }
+    btnExport.disabled = false;
+    btnExport.innerHTML = originalLabel;
   }
 
   window.LinkCheckerTool = {
-    init() {
-      // Refresh the header's current-page label every time this tab is
-      // opened, matching Link Checker Pro's original on-load behavior.
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        const tab = tabs[0];
-        if (tab && tab.url) {
-          pageUrlEl.textContent = tab.url;
-          pageUrlEl.title = tab.url;
-        }
-      });
+    async init() {
+      const tabs = await new Promise((resolve) => chrome.tabs.query({ active: true, currentWindow: true }, resolve));
+      const tab = tabs[0];
+      if (!tab) return;
+      currentTabId = tab.id;
+      pageUrlEl.textContent = tab.url || 'Ready to scan';
+      pageUrlEl.title = tab.url || '';
+
+      await refreshFromBackground(true);
+      startPolling();
     }
   };
 })();
