@@ -149,6 +149,23 @@
 .tool-link-checker .search-box:focus { border-color: var(--lc-accent); }
 .tool-link-checker .search-box::placeholder { color: var(--lc-text-dim); }
 
+.tool-link-checker .filter-actions { display: flex; gap: 6px; align-items: center; }
+.tool-link-checker .filter-actions .search-box { flex: 1; }
+
+.tool-link-checker .btn-copy-all {
+  white-space: nowrap;
+  border: 1px solid var(--lc-border);
+  background: var(--lc-panel);
+  color: var(--lc-text);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.tool-link-checker .btn-copy-all:hover { background: var(--lc-panel-2); }
+.tool-link-checker .btn-copy-all.copied { background: var(--lc-good-bg); color: var(--lc-good); border-color: var(--lc-good); }
+
 /* Table */
 .tool-link-checker .table-wrap {
   overflow-y: auto;
@@ -181,6 +198,7 @@
 .tool-link-checker .col-code { width: 40px; }
 .tool-link-checker .col-time { width: 46px; }
 .tool-link-checker .col-loc { width: 70px; }
+.tool-link-checker .col-copy { width: 40px; }
 
 .tool-link-checker .link-cell {
   display: block;
@@ -224,6 +242,21 @@
 .tool-link-checker .badge-pending { background: var(--lc-gray-bg); color: var(--lc-text-dim); }
 
 .tool-link-checker .loc-tag { font-size: 10px; color: var(--lc-text-dim); }
+
+.tool-link-checker .copy-btn {
+  border: 1px solid var(--lc-border);
+  background: var(--lc-panel);
+  border-radius: 5px;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  color: var(--lc-text-dim);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.tool-link-checker .copy-btn:hover { background: var(--lc-panel-2); color: var(--lc-text); }
+.tool-link-checker .copy-btn.copied { background: var(--lc-good-bg); color: var(--lc-good); border-color: var(--lc-good); }
 
 /* Empty state */
 .tool-link-checker .empty-state {
@@ -273,3 +306,8 @@
   cursor: pointer;
 }
 .tool-link-checker .checkbox-row input { cursor: pointer; }
+.tool-link-checker .persist-note {
+  font-size: 10.5px;
+  color: var(--lc-text-dim);
+  text-align: center;
+}

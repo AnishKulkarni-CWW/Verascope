@@ -452,7 +452,10 @@
             <button class="pill" data-filter="internal" type="button">Internal</button>
             <button class="pill" data-filter="external" type="button">External</button>
           </div>
-          <input type="text" id="lc-search-box" class="search-box" placeholder="Search URL or text…">
+          <div class="filter-actions">
+            <input type="text" id="lc-search-box" class="search-box" placeholder="Search URL or text…">
+            <button id="lc-btn-copy-all" class="btn-copy-all" title="Copy all visible URLs" type="button">Copy All</button>
+          </div>
         </div>
 
         <!-- Table -->
@@ -466,6 +469,7 @@
                 <th class="col-loc">Location</th>
                 <th class="col-code">Code</th>
                 <th class="col-time">Time</th>
+                <th class="col-copy">Copy</th>
               </tr>
             </thead>
             <tbody id="lc-table-body"></tbody>
@@ -476,7 +480,7 @@
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
           </svg>
-          <p>Click <strong>Analyze All Links</strong> above to scan every link on this page — from the top navigation to the footer.</p>
+          <p>Click <strong>Analyze All Links</strong> above to scan every link on this page — from the top navigation to the footer, including menus and embedded frames.</p>
         </div>
 
         <!-- Pagination -->
@@ -500,6 +504,7 @@
             </svg>
             Export to Excel
           </button>
+          <div class="persist-note">Results stay saved even if you close this tab.</div>
         </div>
 
       </div>
@@ -576,7 +581,6 @@
   <script src="tools/nocache/nocache.js"></script>
   <script src="tools/form-validator/mini-xlsx.js"></script>
   <script src="tools/form-validator/popup.js"></script>
-  <script src="tools/link-checker/sheetjs.min.js"></script>
   <script src="tools/link-checker/popup.js"></script>
   <script src="tools/glyphscope/exceljs.min.js"></script>
   <script src="tools/glyphscope/popup.js"></script>
