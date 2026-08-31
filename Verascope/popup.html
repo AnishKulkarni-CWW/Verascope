@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="tools/link-extractor/link-extractor.css">
 <link rel="stylesheet" href="tools/nocache/nocache.css">
 <link rel="stylesheet" href="tools/form-validator/form-validator.css">
-<link rel="stylesheet" href="tools/link-checker/shell-trigger.css">
+<link rel="stylesheet" href="tools/link-checker/link-checker.css">
 <link rel="stylesheet" href="tools/glyphscope/glyphscope.css">
 </head>
 <body>
@@ -213,13 +213,13 @@
         <div class="field">
 
           <label>
-            Number of .nocache insertions
+            Number of .nocache insertions (0 = open as-is)
           </label>
 
           <input
             type="number"
             id="nocacheCount"
-            min="1"
+            min="0"
             value="1">
 
         </div>
@@ -245,6 +245,37 @@
           id="warning"
           class="warning"
           style="display:none;">
+        </div>
+
+        <div class="field">
+
+          <label>
+            Window Type
+          </label>
+
+          <div class="radioGroup">
+
+            <label class="radioOption">
+              <input
+                type="radio"
+                name="windowType"
+                id="normalWindow"
+                value="normal"
+                checked>
+              Normal Window
+            </label>
+
+            <label class="radioOption">
+              <input
+                type="radio"
+                name="windowType"
+                id="incognitoWindow"
+                value="incognito">
+              Incognito Window
+            </label>
+
+          </div>
+
         </div>
 
         <button id="openBtn">
@@ -372,7 +403,7 @@
       </template>
     </section>
 
-    <!-- ================= TOOL 6: Check My Links (broken-link crawler) ================= -->
+    <!-- ================= TOOL 6: Broken Link Crawler ================= -->
     <section class="shell-pane tool-link-checker" data-tool-pane="link-checker">
       <div class="pane-header">
         <span class="pane-header-icon" aria-hidden="true">
@@ -380,12 +411,97 @@
         </span>
         <span class="pane-header-text">
           <span class="pane-title">Broken Link Crawler</span>
-          <span class="pane-subtitle">Scan the page for broken links with a live on-page report</span>
+          <span class="pane-subtitle" id="lc-page-url">Scan every link on this page and export a formatted Excel report</span>
         </span>
       </div>
-      <div class="lc-panel">
-        <button id="lcScanBtn" class="lc-scan-btn" type="button">Scan Page for Broken Links</button>
-        <p id="lcStatus" class="lc-status">Opens a live report on the page — counts, exclude areas, and exports all happen there.</p>
+      <div class="app">
+
+        <!-- Scan CTA -->
+        <div class="scan-row">
+          <button id="lc-btn-scan" class="btn btn-primary btn-block" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span id="lc-btn-scan-label">Analyze All Links on This Page</span>
+          </button>
+          <div class="scan-status" id="lc-scan-status"></div>
+          <div class="progress-track" id="lc-progress-track" style="display:none;">
+            <div class="progress-fill" id="lc-progress-fill"></div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-bar" id="lc-stats-bar" style="display:none;">
+          <div class="stat"><span class="stat-num" id="lc-stat-total">0</span><span class="stat-label">Total</span></div>
+          <div class="stat stat-ok"><span class="stat-num" id="lc-stat-ok">0</span><span class="stat-label">OK</span></div>
+          <div class="stat stat-broken"><span class="stat-num" id="lc-stat-broken">0</span><span class="stat-label">Broken</span></div>
+          <div class="stat stat-redirect"><span class="stat-num" id="lc-stat-redirect">0</span><span class="stat-label">Redirects</span></div>
+          <div class="stat stat-slow"><span class="stat-num" id="lc-stat-slow">0</span><span class="stat-label">Slow</span></div>
+          <div class="stat stat-unverified"><span class="stat-num" id="lc-stat-unverified">0</span><span class="stat-label">Unverified</span></div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-row" id="lc-filter-row" style="display:none;">
+          <div class="pills" id="lc-filter-pills">
+            <button class="pill active" data-filter="all" type="button">All</button>
+            <button class="pill" data-filter="broken" type="button">Broken</button>
+            <button class="pill" data-filter="redirect" type="button">Redirects</button>
+            <button class="pill" data-filter="slow" type="button">Slow</button>
+            <button class="pill" data-filter="ok" type="button">OK</button>
+            <button class="pill" data-filter="internal" type="button">Internal</button>
+            <button class="pill" data-filter="external" type="button">External</button>
+          </div>
+          <input type="text" id="lc-search-box" class="search-box" placeholder="Search URL or text…">
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap" id="lc-table-wrap" style="display:none;">
+          <table class="link-table">
+            <thead>
+              <tr>
+                <th class="col-idx">#</th>
+                <th class="col-status">Status</th>
+                <th class="col-link">Link</th>
+                <th class="col-loc">Location</th>
+                <th class="col-code">Code</th>
+                <th class="col-time">Time</th>
+              </tr>
+            </thead>
+            <tbody id="lc-table-body"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="lc-empty-state">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+          <p>Click <strong>Analyze All Links</strong> above to scan every link on this page — from the top navigation to the footer.</p>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="lc-pagination" style="display:none;">
+          <button id="lc-page-prev" class="page-btn" type="button">&larr;</button>
+          <span id="lc-page-info">Page 1 of 1</span>
+          <button id="lc-page-next" class="page-btn" type="button">&rarr;</button>
+        </div>
+
+        <!-- Footer actions -->
+        <div class="footer">
+          <label class="checkbox-row">
+            <input type="checkbox" id="lc-chk-highlight">
+            <span>Highlight links on page</span>
+          </label>
+          <button id="lc-btn-export" class="btn btn-success btn-block" type="button" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export to Excel
+          </button>
+        </div>
+
       </div>
     </section>
 
@@ -460,7 +576,8 @@
   <script src="tools/nocache/nocache.js"></script>
   <script src="tools/form-validator/mini-xlsx.js"></script>
   <script src="tools/form-validator/popup.js"></script>
-  <script src="tools/link-checker/shell-trigger.js"></script>
+  <script src="tools/link-checker/sheetjs.min.js"></script>
+  <script src="tools/link-checker/popup.js"></script>
   <script src="tools/glyphscope/exceljs.min.js"></script>
   <script src="tools/glyphscope/popup.js"></script>
 
