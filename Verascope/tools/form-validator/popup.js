@@ -1,26 +1,51 @@
 // ============================================================
-// Tool 5: Form QA Automation — popup controller.
-// Restored from the standalone "Form QA Automation" extension's
-// own src/popup.js (this was a placeholder stub before — see the
-// note it used to carry). IIFE-wrapped and pane-scoped like every
-// other tool script sharing this document: every
-// document.getElementById() from the original became
-// pane.querySelector(), and the two injected-file paths in
-// ensureContentScript() were updated from the standalone
-// extension's flat src/ layout to this tool's nested
-// tools/form-validator/ location (paths resolve against the
-// EXTENSION ROOT, not this file's own folder). Everything else —
-// scan/generate/run/export logic — is unchanged. window.
-// FormValidatorTool.init() is a no-op: unlike Alt Text or NoCache,
-// this tool has no persisted state to refresh when the tab is
-// reopened, so all wiring below happens once at file load like
-// the original.
+// Tool 3 (replaced): Form QA Automation — was "Form Field
+// Validator" v1. This is a full swap of the tab's content for
+// a newer standalone extension ("Form QA Automation" v2.0.0),
+// per explicit request. Every change from the original upload
+// is noted below; nothing else was touched.
+//
+// SCOPING: the original standalone extension's `$` helper
+// queried the whole document. Rebound to query within this
+// pane only (pane.querySelector), matching the same pattern
+// used by every other tool in this shell — this pane reuses
+// several very common ids (status, progress, fields,
+// fieldTemplate, detectButton, exportButton, runAllButton,
+// progressBar/-Text/-Count, stopButton) inherited from the
+// same lineage as the OLD Form Validator tool it replaces, and
+// #status specifically also collides with Alt Text's and Link
+// Extractor's own #status elements elsewhere in this shell.
+// The one additional raw document.querySelectorAll call (for
+// the results-table sortable headers) was scoped the same way.
+//
+// PATH FIX: ensureContentScript's chrome.scripting.executeScript
+// files array was ["src/core.js", "src/content.js"], matching
+// the standalone extension's own src/ folder layout (see its
+// manifest.json / README file tree). Corrected to
+// tools/form-validator/core.js and .../content.js, since
+// chrome.scripting.executeScript's files array resolves
+// relative to the EXTENSION ROOT, not the caller's own
+// location — same class of fix needed for every prior tool
+// integrated into this shell.
+//
+// ADDED: window.FormValidatorTool.init() at the bottom, the
+// same interface every other tool exposes so the shell's own
+// tab-switcher (popup.js at the project root) can call it the
+// first time this tab is opened. This tool has no persistent
+// state to refresh on tab-open (it only acts on button
+// clicks), so init() is a no-op, matching Link Extractor's and
+// NoCache's simplest cases.
+//
+// Everything else — semantic-aware test generation, Safe Test
+// Mode confirmation dialogs, the results table/search/filter/
+// sort/detail-panel, and the 5-sheet Excel report builder — is
+// byte-for-byte unchanged from the uploaded file.
 // ============================================================
 (function startPopup() {
   "use strict";
 
   const pane = document.querySelector('[data-tool-pane="form-validator"]');
-  const $ = (id) => pane.querySelector('#' + id);
+  const $ = (id) => pane.querySelector(`#${id}`);
   const detectButton = $("detectButton"), statusElement = $("status");
   const dashboard = $("dashboard");
   const metricForms = $("metricForms"), metricFields = $("metricFields"), metricTests = $("metricTests"),
@@ -42,6 +67,7 @@
   let scanData = null;             // raw scan response { url, title, formsDetected, fields }
   let allFields = [];              // fields with .cases (each case tagged testType/severity)
   let enabledCategories = new Set(["Positive", "Negative", "Boundary", "Required", "Accessibility"]);
+  let testRegistry = [];           // flattened { testId, field, testCase } queued/available to run
   let results = [];                // executed test result rows (see buildResultRow)
   let testCounter = 0;
   let stopRequested = false;
@@ -59,7 +85,9 @@
 
   function ruleLabels(field) {
     const labels = [`type: ${field.type}`, `semantic: ${field.semanticType || field.type}`];
-    if (field.required) labels.push("required");
+    if (field.required && !field.softRequired) labels.push("required");
+    else if (field.softRequired) labels.push(`required (inferred: ${field.softRequiredReason})`);
+    else if (field.requirementUnknown) labels.push("requirement unknown");
     if (field.min) labels.push(`min: ${field.min}`);
     if (field.max) labels.push(`max: ${field.max}`);
     if (field.step) labels.push(`step: ${field.step}`);
@@ -106,6 +134,7 @@
     detailPanel.hidden = true;
     progress.hidden = true;
     results = [];
+    testRegistry = [];
     testCounter = 0;
     setStatus("Scanning the page for forms and fields…");
     try {
@@ -120,7 +149,7 @@
       allFields = response.fields;
 
       const totalCases = allFields.reduce((sum, field) => sum + field.cases.length, 0);
-      setStatus(allFields.length ? "Scan complete. Review fields below, then Generate Tests." : "No supported visible form fields were found on this page.");
+      setStatus(allFields.length ? "Scan complete. Review fields below, then Generate Tests." : buildEmptyScanDiagnosticMessage(response.diagnostics), Boolean(!allFields.length && response.diagnostics));
       dashboard.hidden = false;
       updateDashboard();
       metricTests.textContent = String(totalCases);
@@ -133,6 +162,29 @@
     } finally {
       detectButton.disabled = false;
     }
+  }
+
+  // Turns the raw scan diagnostics (see content.js's buildScanDiagnostics) into
+  // a readable status message, ONLY shown when a scan found zero fields —  this
+  // is specifically to make "why didn't it find anything" checkable without
+  // needing devtools open, rather than a dead-end "no fields found" message.
+  function buildEmptyScanDiagnosticMessage(diagnostics) {
+    if (!diagnostics) return "No supported visible form fields were found on this page.";
+    const { totalCandidatesFound, totalFilteredOut, filteredOutReasons, iframeCount, formCount, selectCount, checkboxCount } = diagnostics;
+    if (totalCandidatesFound === 0) {
+      const iframeNote = iframeCount > 0
+        ? ` This page has ${iframeCount} iframe(s) — if the form lives inside one, it can't be scanned (Chrome extensions only see the page's own top-level content, not iframes, without extra permissions this tool doesn't request).`
+        : "";
+      return `No input/select/textarea elements exist anywhere in the page's own DOM at all right now (found ${formCount} <form> tag(s), ${selectCount} <select>, ${checkboxCount} checkbox). If the form appears on screen but this still says 0, it's likely rendered after a delay by the page's own JavaScript — try waiting a few seconds after the page visibly finishes loading, then Scan Form again.${iframeNote}`;
+    }
+    const reasonParts = [];
+    if (filteredOutReasons.notVisible) reasonParts.push(`${filteredOutReasons.notVisible} not visible (hidden, zero-size, or display:none)`);
+    if (filteredOutReasons.disabled) reasonParts.push(`${filteredOutReasons.disabled} disabled`);
+    if (filteredOutReasons.readOnly) reasonParts.push(`${filteredOutReasons.readOnly} read-only`);
+    const reasonText = reasonParts.length ? reasonParts.join(", ") : "an unknown reason";
+    const detailList = (diagnostics.filteredOutDetail || []).map((d) => `${d.identity} (${d.reason})`).join(", ");
+    const detailNote = detailList ? ` Specifically: ${detailList}.` : "";
+    return `Found ${totalCandidatesFound} candidate field(s) in the page, but all ${totalFilteredOut} were filtered out: ${reasonText}.${detailNote} If a field looks visible on screen but is reported not visible here, it may be behind a modal/tab that hasn't been opened yet, or styled in a way this check doesn't recognize as visible — try opening/expanding whatever section contains it, then Scan Form again.`;
   }
 
   function updateDashboard() {
@@ -158,11 +210,47 @@
     fields.forEach((field) => {
       const fragment = fieldTemplate.content.cloneNode(true);
       fragment.querySelector(".field-label").textContent = field.label;
+      const isOrphaned = field.formLabel === "(no parent form)";
       fragment.querySelector(".field-meta").textContent = `${field.tagName} · ${field.name || "unnamed"} · form: ${field.formLabel}`;
+      if (isOrphaned) {
+        // Visually flags fields with no wrapping <form> (e.g. a widget/modal
+        // wired up via JS rather than a real form submission) so that two
+        // similar-looking fields -- like a branch selector that appears both
+        // in the main form AND in a separate "Request a call back" modal
+        // with its own copy of the same dropdown -- read as genuinely
+        // distinct elements rather than the same field rendered twice. This
+        // is a display-only change: countForms() already correctly counts
+        // these as part of the same "form-like group" rather than a second
+        // form (see content.js), and this field is still fully scanned and
+        // testable either way -- only how it's visually flagged changed.
+        const badge = document.createElement("span");
+        badge.className = "orphan-badge";
+        badge.title = "This field has no wrapping <form> element — it's likely a separate widget or modal (e.g. a callback popup) wired up via JavaScript, not part of the main form submission.";
+        badge.textContent = "no parent form";
+        fragment.querySelector(".field-heading").insertBefore(badge, fragment.querySelector(".case-count"));
+      }
       const visibleCases = field.cases.filter(casePassesCategoryFilter);
       fragment.querySelector(".case-count").textContent = `${visibleCases.length} cases`;
       const rulesElement = fragment.querySelector(".rules");
       ruleLabels(field).forEach((label) => { const tag = document.createElement("span"); tag.className = "rule"; tag.textContent = label; rulesElement.append(tag); });
+
+      // A dedicated, visually distinct banner (not a compact rule-tag pill)
+      // explaining WHY a checkbox/radio's required-ness can't be determined.
+      // This was previously packed into the same small amber "rule" pill
+      // used for every other tag (type, semantic, min/max, etc.) -- same
+      // size, same color, same position as before -- which meant real
+      // wording changes across several rounds of fixes were genuinely
+      // invisible at a glance, since the tag still started with the same
+      // words and looked identical to the one before it. This banner has
+      // its own block, its own icon, and full sentence text so a real
+      // change reads as a real change.
+      if (field.requirementUnknown) {
+        const banner = fragment.querySelector(".unknown-banner");
+        banner.hidden = false;
+        banner.querySelector(".unknown-banner-text").textContent = field.formNoValidate
+          ? "Can't confirm if this is required: this form has novalidate, so native browser validation never runs here — only the site's own JavaScript actually knows."
+          : "Can't confirm if this is required: no required or aria-required attribute is present on this element.";
+      }
 
       const runField = fragment.querySelector(".run-field");
       runField.disabled = visibleCases.length === 0;
@@ -423,6 +511,7 @@
     const passed = results.filter((r) => r.result === "PASS").length;
     const failed = results.filter((r) => r.result === "FAIL").length;
     const warnings = results.filter((r) => r.result === "WARNING").length;
+    const passRate = total ? passed / total : 0;
     const now = new Date();
 
     const categories = ["Positive", "Negative", "Boundary", "Required", "Accessibility"];
@@ -437,7 +526,7 @@
     // ---- Sheet 1: QA Summary ----
     const summaryRows = [];
     summaryRows.push([{ value: "Form QA Automation Report", style: "title" }, { style: "title" }, { style: "title" }, { style: "title" }]);
-    summaryRows.push([{ value: `Generated by Form QA Automation · ${now.toISOString()}`, style: "subtitle" }, { style: "subtitle" }, { style: "subtitle" }, { style: "subtitle" }]);
+    summaryRows.push([{ value: `Generated by Form Field Validator · ${now.toISOString()}`, style: "subtitle" }, { style: "subtitle" }, { style: "subtitle" }, { style: "subtitle" }]);
     summaryRows.push([]);
     summaryRows.push([{ value: "Website URL", style: "metricLabel" }, { value: scanData?.url || "", style: "cell" }, {}, {}]);
     summaryRows.push([{ value: "Page Title", style: "metricLabel" }, { value: scanData?.title || "", style: "cell" }, {}, {}]);
@@ -527,7 +616,7 @@
         { value: field.type, style: "cellCenter" },
         { value: field.name, style: "cellMono" },
         { value: field.id, style: "cellMono" },
-        { value: field.required ? "Yes" : "No", style: "cellCenter" },
+        { value: field.required ? (field.softRequired ? "Yes (inferred)" : "Yes") : (field.requirementUnknown ? "Unknown" : "No"), style: "cellCenter" },
         { value: field.minLength, style: "cellCenter" },
         { value: field.maxLength, style: "cellCenter" },
         { value: field.min, style: "cellCenter" },
@@ -611,9 +700,9 @@
 
   window.FormValidatorTool = {
     init() {
-      // No persisted state to refresh on tab-open — everything above is
-      // wired once at load, matching the standalone extension's own
-      // behavior (it had no multi-tab popup to reopen into).
+      // No persistent state to refresh on tab-open — this tool only acts
+      // on the Scan Form button click, mirroring Link Extractor's and
+      // NoCache's no-op init().
     }
   };
 })();
