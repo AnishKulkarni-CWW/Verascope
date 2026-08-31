@@ -20,6 +20,7 @@
   const warningEl         = pane.querySelector('#warning');
   const openBtn           = pane.querySelector('#openBtn');
   const resultEl          = pane.querySelector('#result');
+  const incognitoRadio    = pane.querySelector('#incognitoWindow');
 
   function generateRandomString() {
 
@@ -188,21 +189,43 @@
               warningEl.style.display =
                   "none";
 
-              urls.forEach(url => {
-
-                  chrome.tabs.create({
-                      url:
+              const finalUrls =
+                  urls.map(
+                      url =>
                           addNoCache(
                               url,
                               safeCount
                           )
-                  });
+                  );
 
-              });
+              const useIncognito =
+                  incognitoRadio &&
+                  incognitoRadio.checked;
+
+              if (useIncognito) {
+
+                  chrome.windows.create({
+                      url: finalUrls,
+                      incognito: true
+                  });
+              }
+              else {
+
+                  finalUrls.forEach(url => {
+
+                      chrome.tabs.create({
+                          url: url
+                      });
+
+                  });
+              }
 
               resultEl
                   .innerText =
-                  `✓ Opened ${urls.length} URL(s) successfully`;
+                  `✓ Opened ${urls.length} URL(s) successfully` +
+                  (useIncognito
+                      ? " in Incognito"
+                      : "");
           }
       );
 

@@ -1,0 +1,275 @@
+/* ============================================================
+   Tool 6 (replaced): Broken Link Crawler — was "Check My Links",
+   a heavyweight clone (jQuery/Bootstrap/DataTables/JSZip) whose
+   report UI depended on an img/ folder of icons that was never
+   present in this repo, so every icon in its injected report
+   failed with net::ERR_FILE_NOT_FOUND and the tool was unusable.
+
+   This is a full retheme of "Link Checker Pro" — a self-contained
+   standalone extension with no missing assets — from its original
+   light popup.css to the shell's dark palette, scoped under
+   .tool-link-checker the same way every tool in this shell is
+   scoped, since this pane shares a document with six others.
+
+   PALETTE: reuses the exact --lc- token values already verified
+   working here before this replacement (and mirrored into Form
+   Validator as --fv-), so this tab keeps matching the rest of the
+   shell's dark surfaces/accent seamlessly.
+
+   Layout, spacing, sizing and structure are otherwise unchanged
+   from the original popup.css — only colors, selector scoping,
+   and the light->dark surface swaps below.
+   ============================================================ */
+
+.tool-link-checker {
+  --lc-bg: #0f1115;
+  --lc-panel: #161922;
+  --lc-panel-2: #1c2030;
+  --lc-border: #2a2f3f;
+  --lc-text: #e8eaf0;
+  --lc-text-dim: #9aa1b4;
+  --lc-accent: #5b8def;
+  --lc-accent-2: #7c6df0;
+  --lc-good: #34d399;
+  --lc-good-bg: rgba(52, 211, 153, 0.12);
+  --lc-bad: #f87171;
+  --lc-bad-bg: rgba(248, 113, 113, 0.12);
+  --lc-warn: #fbbf24;
+  --lc-warn-bg: rgba(251, 191, 36, 0.12);
+  --lc-gray-bg: rgba(154, 161, 180, 0.12);
+}
+
+.tool-link-checker * {
+  box-sizing: border-box;
+}
+
+.tool-link-checker {
+  background: var(--lc-bg);
+  color: var(--lc-text);
+  font-size: 13px;
+}
+
+.tool-link-checker .app {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scan row */
+.tool-link-checker .scan-row { padding: 12px 16px 8px; }
+.tool-link-checker .scan-status { font-size: 11.5px; color: var(--lc-text-dim); margin-top: 6px; min-height: 14px; }
+
+.tool-link-checker .progress-track {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--lc-panel-2);
+  margin-top: 6px;
+  overflow: hidden;
+}
+.tool-link-checker .progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--lc-accent), var(--lc-accent-2));
+  transition: width 0.15s ease;
+}
+
+/* Buttons */
+.tool-link-checker .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+.tool-link-checker .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.tool-link-checker .btn:not(:disabled):hover { filter: brightness(1.08); }
+.tool-link-checker .btn-block { width: 100%; }
+.tool-link-checker .btn-primary { background: var(--lc-accent); color: #fff; }
+.tool-link-checker .btn-success { background: var(--lc-good); color: #06281c; }
+
+/* Stats bar */
+.tool-link-checker .stats-bar {
+  display: flex;
+  padding: 10px 16px;
+  gap: 6px;
+  border-bottom: 1px solid var(--lc-border);
+}
+.tool-link-checker .stat {
+  flex: 1;
+  text-align: center;
+  padding: 6px 2px;
+  border-radius: 8px;
+  background: var(--lc-panel-2);
+}
+.tool-link-checker .stat-num { display: block; font-size: 15px; font-weight: 700; line-height: 1.2; color: var(--lc-text); }
+.tool-link-checker .stat-label { display: block; font-size: 9.5px; color: var(--lc-text-dim); text-transform: uppercase; letter-spacing: 0.03em; margin-top: 1px; }
+.tool-link-checker .stat-ok .stat-num { color: var(--lc-good); }
+.tool-link-checker .stat-broken .stat-num { color: var(--lc-bad); }
+.tool-link-checker .stat-redirect .stat-num { color: var(--lc-warn); }
+.tool-link-checker .stat-slow .stat-num { color: var(--lc-warn); }
+.tool-link-checker .stat-unverified .stat-num { color: var(--lc-text-dim); }
+
+/* Filters */
+.tool-link-checker .filter-row {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--lc-border);
+}
+.tool-link-checker .pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+.tool-link-checker .pill {
+  border: 1px solid var(--lc-border);
+  background: var(--lc-panel);
+  color: var(--lc-text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.tool-link-checker .pill.active { background: var(--lc-accent); border-color: var(--lc-accent); color: #fff; }
+.tool-link-checker .search-box {
+  width: 100%;
+  padding: 6px 9px;
+  border: 1px solid var(--lc-border);
+  border-radius: 7px;
+  font-size: 12px;
+  outline: none;
+  background: var(--lc-panel);
+  color: var(--lc-text);
+}
+.tool-link-checker .search-box:focus { border-color: var(--lc-accent); }
+.tool-link-checker .search-box::placeholder { color: var(--lc-text-dim); }
+
+/* Table */
+.tool-link-checker .table-wrap {
+  overflow-y: auto;
+  max-height: 260px;
+  border-bottom: 1px solid var(--lc-border);
+}
+.tool-link-checker .link-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.tool-link-checker .link-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--lc-panel);
+  text-align: left;
+  padding: 6px 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--lc-text-dim);
+  border-bottom: 1px solid var(--lc-border);
+  z-index: 1;
+}
+.tool-link-checker .link-table tbody td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--lc-border);
+  vertical-align: top;
+}
+.tool-link-checker .link-table tbody tr:hover { background: var(--lc-panel-2); }
+
+.tool-link-checker .col-idx { width: 24px; }
+.tool-link-checker .col-status { width: 62px; }
+.tool-link-checker .col-code { width: 40px; }
+.tool-link-checker .col-time { width: 46px; }
+.tool-link-checker .col-loc { width: 70px; }
+
+.tool-link-checker .link-cell {
+  display: block;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--lc-accent);
+  text-decoration: none;
+  cursor: pointer;
+}
+.tool-link-checker .link-cell:hover { text-decoration: underline; }
+.tool-link-checker .link-text-sub {
+  display: block;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--lc-text-dim);
+  font-size: 10.5px;
+  margin-top: 1px;
+}
+
+.tool-link-checker .badge {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.tool-link-checker .badge-ok { background: var(--lc-good-bg); color: var(--lc-good); }
+.tool-link-checker .badge-broken { background: var(--lc-bad-bg); color: var(--lc-bad); }
+.tool-link-checker .badge-redirect { background: var(--lc-warn-bg); color: var(--lc-warn); }
+.tool-link-checker .badge-slow { background: var(--lc-warn-bg); color: var(--lc-warn); }
+.tool-link-checker .badge-unverified { background: var(--lc-gray-bg); color: var(--lc-text-dim); }
+.tool-link-checker .badge-timeout { background: var(--lc-bad-bg); color: var(--lc-bad); }
+.tool-link-checker .badge-skipped { background: var(--lc-gray-bg); color: var(--lc-text-dim); }
+.tool-link-checker .badge-pending { background: var(--lc-gray-bg); color: var(--lc-text-dim); }
+
+.tool-link-checker .loc-tag { font-size: 10px; color: var(--lc-text-dim); }
+
+/* Empty state */
+.tool-link-checker .empty-state {
+  padding: 34px 24px;
+  text-align: center;
+  color: var(--lc-text-dim);
+}
+.tool-link-checker .empty-state svg { margin-bottom: 10px; }
+.tool-link-checker .empty-state p { margin: 0; font-size: 12.5px; line-height: 1.5; }
+
+/* Pagination */
+.tool-link-checker .pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 7px 16px;
+  border-bottom: 1px solid var(--lc-border);
+  font-size: 11.5px;
+  color: var(--lc-text-dim);
+}
+.tool-link-checker .page-btn {
+  border: 1px solid var(--lc-border);
+  background: var(--lc-panel);
+  color: var(--lc-text);
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.tool-link-checker .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Footer */
+.tool-link-checker .footer {
+  padding: 10px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tool-link-checker .checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--lc-text-dim);
+  cursor: pointer;
+}
+.tool-link-checker .checkbox-row input { cursor: pointer; }

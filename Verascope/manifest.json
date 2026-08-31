@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Verascope — Page Quality & QA Suite",
   "version": "1.9.0",
-  "description": "Seven QA tools in one popup: check meta title/description against target SEO copy, overlay alt text on images with an Excel validation report, extract all page links/images to Excel, open cache-busted URLs in bulk, run automated semantic-aware form field QA with a 5-sheet Excel report, crawl a page for broken links with caching and an exclude-area picker, and audit every font on a page with live hover inspection and a styled Excel font report.",
-  "permissions": ["activeTab", "scripting", "downloads", "storage", "windows", "webRequest"],
+  "description": "Seven QA tools in one popup: check meta title/description against target SEO copy, overlay alt text on images with an Excel validation report, extract all page links/images to Excel, open cache-busted URLs in bulk, run automated semantic-aware form field QA with a 5-sheet Excel report, crawl a page for broken/redirected/slow links and export a formatted Excel report, and audit every font on a page with live hover inspection and a styled Excel font report.",
+  "permissions": ["activeTab", "scripting", "downloads", "storage"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "tools/alt-text/background.js"
@@ -26,15 +26,11 @@
       "matches": ["<all_urls>"],
       "js": ["tools/alt-text/content.js"],
       "run_at": "document_idle"
-    }
-  ],
-  "web_accessible_resources": [
+    },
     {
-      "resources": [
-        "tools/link-checker/pages/linkreport.html",
-        "tools/link-checker/pages/minimize-checkmylink.html"
-      ],
-      "matches": ["<all_urls>"]
+      "matches": ["<all_urls>"],
+      "js": ["tools/link-checker/content.js"],
+      "run_at": "document_idle"
     }
   ]
 }
