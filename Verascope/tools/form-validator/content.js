@@ -456,6 +456,31 @@
     return { valid: false, issues: [{ code: "softRequiredEmpty", message }] };
   }
 
+  // Per-element highlight bookkeeping. The page's own outline is captured once
+  // (before our first highlight) and any pending reset timer is cancelled when a
+  // new case starts, so back-to-back cases can't restore a previous case's
+  // colour and leave it stuck on the field. A persisted highlight (the final
+  // passing positive case of a run) stays until the field is tested again.
+  const highlightState = new WeakMap();
+
+  function applyHighlight(element, outline, persist) {
+    let state = highlightState.get(element);
+    if (!state) {
+      state = { original: element.style.outline, timer: null };
+      highlightState.set(element, state);
+    }
+    if (state.timer) {
+      window.clearTimeout(state.timer);
+      state.timer = null;
+    }
+    element.style.outline = outline;
+    if (persist) return;
+    state.timer = window.setTimeout(() => {
+      element.style.outline = state.original;
+      state.timer = null;
+    }, 1800);
+  }
+
   async function runCase(fieldId, testCase) {
     const element = fieldElements.get(fieldId);
     if (!element || !element.isConnected) return { ok: false, error: "FIELD_MISSING" };
@@ -486,8 +511,7 @@
       const ariaReflectsInvalid = actualValid ? true : ariaInvalidNow === "true";
 
       element.scrollIntoView({ behavior: "smooth", block: "center" });
-      element.style.outline = verdict === "matched" ? "3px solid #1f9d55" : verdict === "mismatch" ? "3px solid #dc3545" : "3px solid #d97706";
-      window.setTimeout(() => { element.style.outline = originalOutline; }, 1800);
+      applyHighlight(element, verdict === "matched" ? "3px solid #1f9d55" : verdict === "mismatch" ? "3px solid #dc3545" : "3px solid #d97706", Boolean(testCase.persistHighlight) && verdict === "matched");
 
       const allIssues = [...computedConstraints.issues, ...softRequiredConstraint.issues];
       return {
