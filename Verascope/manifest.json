@@ -3,7 +3,7 @@
   "name": "Verascope — Page Quality & QA Suite",
   "version": "1.9.0",
   "description": "Seven QA tools in one popup: check meta title/description against target SEO copy, overlay alt text on images with an Excel validation report, extract all page links/images to Excel, open cache-busted URLs in bulk, run automated semantic-aware form field QA with a 5-sheet Excel report, crawl a page for broken/redirected/slow links and export a formatted Excel report, and audit every font on a page with live hover inspection and a styled Excel font report.",
-  "permissions": ["activeTab", "scripting", "downloads", "storage", "tabs", "webNavigation"],
+  "permissions": ["activeTab", "scripting", "downloads", "storage", "tabs", "webNavigation", "webRequest"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "tools/alt-text/background.js"

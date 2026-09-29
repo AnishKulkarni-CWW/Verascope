@@ -321,9 +321,38 @@
   // ---------------------------------------------------------------------
   // Execution
   // ---------------------------------------------------------------------
+  // A case that leaves the field holding a value we expect to be accepted.
+  function isPositiveCase(testCase) {
+    return testCase.testType === "Positive" && testCase.expectedValid === true && !testCase.isStaticAudit;
+  }
+
+  // Runs every negative / required / boundary / accessibility case first and
+  // all positive cases last (across every field), so each field finishes the
+  // run holding a valid value instead of whatever the last negative probe left
+  // behind (e.g. "qa@" in an email field). Within a field, the "typical" value
+  // goes last so the field ends on the most realistic input. The final positive
+  // case of each field is flagged so its green highlight stays on the page.
+  function orderQueue(groups) {
+    const first = [];
+    const last = [];
+    groups.forEach((group) => {
+      const positives = [];
+      group.cases.forEach((testCase) => {
+        if (isPositiveCase(testCase)) positives.push(testCase);
+        else first.push({ field: group.field, testCase });
+      });
+      const ordered = positives.filter((c) => c.category !== "typical").concat(positives.filter((c) => c.category === "typical"));
+      ordered.forEach((testCase, index) => {
+        const isFinal = index === ordered.length - 1;
+        last.push({ field: group.field, testCase: isFinal ? { ...testCase, persistHighlight: true } : testCase });
+      });
+    });
+    return first.concat(last);
+  }
+
   async function runBatch(groups) {
     if (!activeTabId) { setStatus("Scan a page first.", true); return; }
-    const queue = groups.flatMap((group) => group.cases.map((testCase) => ({ field: group.field, testCase })));
+    const queue = orderQueue(groups);
     if (!queue.length) { setStatus("There are no cases to run for the selected categories.", true); return; }
 
     const anyValueChanging = queue.some((item) => !item.testCase.isStaticAudit);
